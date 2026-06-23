@@ -10,7 +10,7 @@ piggy-back an out-of-band swap of the header progress bar. Free-text saves are
 silent (HTTP 204) so the user's textarea keeps focus while typing.
 """
 
-from django.db import transaction
+from django.db import connection, transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
@@ -20,6 +20,18 @@ from . import checklist
 from .models import Concert
 
 META_FIELDS = frozenset(["name", "date", "respo", "mandataire"])
+
+
+def healthz(request: HttpRequest) -> HttpResponse:
+    """Liveness probe for the container healthcheck.
+
+    A failing probe makes ``podman auto-update`` roll back to the previous
+    image, so this must catch a broken release: it verifies the app booted and
+    that SQLite is reachable. No auth, no side effects.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT 1")
+    return HttpResponse("ok", content_type="text/plain")
 
 
 def concert_list(request: HttpRequest) -> HttpResponse:
