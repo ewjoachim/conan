@@ -1,7 +1,10 @@
 FROM php:8.2-apache
 
-# Activer mod_rewrite + extension SQLite
-RUN a2enmod rewrite \
+# Installer les dépendances système + extension SQLite
+RUN apt-get update \
+    && apt-get install -y libsqlite3-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && a2enmod rewrite \
     && docker-php-ext-install pdo_sqlite
 
 # Autoriser .htaccess
