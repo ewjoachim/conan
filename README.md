@@ -69,9 +69,15 @@ The container runs as the non-root user `10001:10001`, listens on **port 8000**,
 runs migrations on startup, and stores the database under **`/data`** (declared
 as a volume). htmx is fetched at build time, so nothing is vendored in git.
 
-## Deployment (Podman Quadlet, rootful, via Ansible)
+A `HEALTHCHECK` probes `/healthz` — a no-auth liveness endpoint that confirms the
+app booted and SQLite is reachable. The probe connects over loopback but sends
+the real `Host` header (taken from `ALLOWED_HOSTS`), so production host
+validation stays strict. Under Podman `AutoUpdate=registry`, a failing probe on a
+freshly pulled image rolls back to the previous one.
 
-We deploy with **rootful Podman** (root runs a system quadlet). The database
+## Example deployment using Podman Quadlet, rootful, via Ansible
+
+Here's an example with **rootful Podman** (root runs a system quadlet). The database
 lives on a **host bind mount** so it can be backed up directly.
 
 The writable-volume trick: under rootful Podman there is no UID remapping — the
@@ -79,7 +85,7 @@ container UID maps 1:1 to the host UID. So set the container user to the host
 user that should own the files (e.g. `www-data`, UID 33), and `chown` the host
 directory to that same UID. No `keep-id` (that is rootless-only).
 
-The `SECRET_KEY` must **never** be written in plaintext into the quadlet unit
+Let's avoid writing the `SECRET_KEY` in plaintext into the quadlet unit
 file (it would land readable on disk on the server). Inject it as a **Podman
 secret** mounted into the container's environment; keep the value itself in an
 encrypted store (e.g. Ansible Vault), never in the playbook.
@@ -136,6 +142,13 @@ systemctl start conan
 ```
 
 Proxy `https://conan.negitachi.fr` to `127.0.0.1:8080`.
+
+**Continuous delivery.** The quadlet sets `AutoUpdate=registry` + `Pull=newer`,
+so `podman-auto-update.timer` pulls a newly pushed `:latest` and restarts the
+container — no deploy step reaches into the server. The timer ships with a daily
+schedule; the role tightens it to every ~15 min via a drop-in. Combined with the
+image's healthcheck, a broken release is pulled, fails its probe, and is rolled
+back automatically.
 
 > If you ever move to **rootless** Podman (running the service as a specific
 > user), drop the `user:` line and instead map the in-container user to the host
