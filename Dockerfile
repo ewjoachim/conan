@@ -48,4 +48,11 @@ USER 10001:10001
 VOLUME /data
 EXPOSE 8000
 
+# Liveness probe. A failing check makes `podman auto-update` roll back to the
+# previous image (the slim base has no curl, so use Python's stdlib). We connect
+# over loopback but send the real Host header (first entry of ALLOWED_HOSTS) so
+# production host validation stays strict — no need to allow-list localhost.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD python -c "import os, urllib.request as u; h=(os.environ.get('ALLOWED_HOSTS') or '127.0.0.1').split(',')[0].strip().lstrip('.') or '127.0.0.1'; u.urlopen(u.Request('http://127.0.0.1:8000/healthz', headers={'Host': h}), timeout=2)"
+
 ENTRYPOINT ["./docker-entrypoint.sh"]
