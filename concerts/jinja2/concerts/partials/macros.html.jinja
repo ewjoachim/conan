@@ -1,0 +1,6 @@
+{# Reusable HTMX attribute fragments. Call results with `| safe` so the literal
+   quotes survive autoescaping. #}
+
+{% macro toggle_attrs(pk, key, step_id) -%}
+hx-post="{{ url('toggle', args=[pk]) }}" hx-vals='{"key": "{{ key }}", "step": "{{ step_id }}"}' hx-target="#step_{{ step_id }}" hx-swap="outerHTML"
+{%- endmacro %}

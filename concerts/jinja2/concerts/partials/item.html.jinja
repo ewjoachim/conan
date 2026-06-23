@@ -1,0 +1,101 @@
+{% from "concerts/partials/macros.html.jinja" import toggle_attrs %}
+{#- Renders one checklist item. Dispatches on item.type:
+    simple | textfield | yesno | cotech. Context: item, step, concert, state. -#}
+
+{% if item.type == 'cotech' %}
+  {% set mode = state.get('cotech_mode') %}
+  <div class="yesno-item">
+    <div style="margin-bottom:.35rem">
+      <span class="yesno-label">CoTech au courant</span>
+      <div class="yesno-hint">Via #Conantech</div>
+    </div>
+    <div class="yesno-btns" style="margin-top:.5rem">
+      {% for val, label in COTECH_OPTIONS %}
+        <button class="yn-btn {% if mode == val %}{{ 'active-yes' if val == 'passage' else 'active-neutral' }}{% endif %}"
+          hx-post="{{ url('cotech_mode', args=[concert.pk]) }}"
+          hx-vals='{"mode": "{{ val }}", "step": "{{ step.id }}"}'
+          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">{{ label }}</button>
+      {% endfor %}
+    </div>
+  </div>
+  {% if mode == 'passage' %}
+    <div class="sub-items">
+      <div style="padding:.75rem 1rem">
+        <div style="font-size:.83rem;font-weight:600;color:var(--ink);margin-bottom:.3rem">Éléments demandés par CoTech</div>
+        <div class="yesno-hint" style="margin-bottom:.5rem">Inscrire les questions de CoTech, rajouter les réponses quand on les a.</div>
+        <textarea class="text-field-area" placeholder="Questions et réponses…" name="text"
+          hx-post="{{ url('field', args=[concert.pk]) }}" hx-vals='{"key": "cotech_text"}'
+          hx-trigger="input changed delay:800ms" hx-swap="none">{{ state.get('cotech_text', '') }}</textarea>
+        <div class="text-field-done-row">
+          <div class="check-wrap" {{ toggle_attrs(concert.pk, 'cotech_transmis', step.id) | safe }}>
+            <div class="check-box {% if state.get('cotech_transmis') %}checked{% endif %}"></div>
+          </div>
+          <span class="text-field-done-label {% if state.get('cotech_transmis') %}done{% endif %}"
+            {{ toggle_attrs(concert.pk, 'cotech_transmis', step.id) | safe }}>Transmis</span>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+{% elif item.type == 'textfield' %}
+  <div class="item">
+    <div class="item-content">
+      <div class="item-label">{{ item.label }}</div>
+      <div class="text-field-wrap">
+        <textarea class="text-field-area" placeholder="{{ item.placeholder }}" name="text"
+          hx-post="{{ url('field', args=[concert.pk]) }}" hx-vals='{"key": "tft_{{ item.id }}"}'
+          hx-trigger="input changed delay:800ms" hx-swap="none">{{ state.get('tft_' + item.id, '') }}</textarea>
+        <div class="text-field-done-row">
+          <div class="check-wrap" {{ toggle_attrs(concert.pk, 'tf_' + item.id, step.id) | safe }}>
+            <div class="check-box {% if state.get('tf_' + item.id) %}checked{% endif %}"></div>
+          </div>
+          <span class="text-field-done-label {% if state.get('tf_' + item.id) %}done{% endif %}"
+            {{ toggle_attrs(concert.pk, 'tf_' + item.id, step.id) | safe }}>Transmis</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% elif item.type == 'yesno' %}
+  {% set yn = state.get('yn_' + item.id) %}
+  <div class="yesno-item">
+    <div class="yesno-row">
+      <span class="yesno-label">{{ item.label }}</span>
+      <span class="yesno-question">Pertinent ?</span>
+      <div class="yesno-btns">
+        <button class="yn-btn {% if yn == 'y' %}active-yes{% endif %}"
+          hx-post="{{ url('yesno', args=[concert.pk]) }}"
+          hx-vals='{"item_id": "{{ item.id }}", "val": "y", "step": "{{ step.id }}"}'
+          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">Oui</button>
+        <button class="yn-btn {% if yn == 'n' %}active-neutral{% endif %}"
+          hx-post="{{ url('yesno', args=[concert.pk]) }}"
+          hx-vals='{"item_id": "{{ item.id }}", "val": "n", "step": "{{ step.id }}"}'
+          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">Non</button>
+      </div>
+    </div>
+  </div>
+  {% if yn == 'y' %}
+    <div class="sub-items">
+      {% for sub in item.subs %}
+        <div class="sub-item">
+          <div class="sub-check {% if state.get(sub.id) %}checked{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}></div>
+          <span class="sub-label {% if state.get(sub.id) %}done{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}>{{ sub.label }}</span>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="item">
+    <div class="item-row">
+      <div class="check-wrap" {{ toggle_attrs(concert.pk, item.id, step.id) | safe }}>
+        <div class="check-box {% if state.get(item.id) %}checked{% endif %}"></div>
+      </div>
+      <div class="item-content">
+        <div class="item-label {% if state.get(item.id) %}done{% endif %}"
+          {{ toggle_attrs(concert.pk, item.id, step.id) | safe }} style="cursor:pointer">{{ item.label }}</div>
+        {% if item.hint %}<div class="item-hint">{{ item.hint | safe }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}

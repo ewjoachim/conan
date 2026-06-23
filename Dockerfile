@@ -1,21 +1,58 @@
-FROM php:8.2-apache
+# Frontend assets: fetch JS deps (htmx, ...) via npm so they're integrity-checked
+# by package-lock.json and tracked by Renovate. Add deps with `npm install <pkg>`.
+FROM node:22-slim@sha256:b1e7fcc44bd47f2d186de26c1202345369e7f1028b08956e75cfb52ad8e483f9 AS assets
+WORKDIR /assets
+COPY package.json package-lock.json ./
+RUN npm ci
 
-# Installer les dépendances système + extension SQLite
-RUN apt-get update \
-    && apt-get install -y libsqlite3-dev \
-    && rm -rf /var/lib/apt/lists/* \
-    && a2enmod rewrite \
-    && docker-php-ext-install pdo_sqlite
+FROM python:3.14-slim@sha256:44dd04494ee8f3b538294360e7c4b3acb87c8268e4d0a4828a6500b1eff50061
 
-# Autoriser .htaccess
-RUN sed -i 's/AllowOverride None/AllowOverride All/g' /etc/apache2/apache2.conf
+# uv from the official image (no pip middleman).
+COPY --from=ghcr.io/astral-sh/uv:0.11.24@sha256:99ea34acedc870ba4ad11a1f540a1c04267c9f30aadc465a94406f52dfda2c36 /uv /uvx /bin/
 
-COPY . /var/www/html/
+ENV UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    DJANGO_SETTINGS_MODULE=conan.settings \
+    DATABASE_PATH=/data/conan.db
 
-# Le dossier data/ sera monté depuis l'hôte (volume)
-RUN mkdir -p /var/www/html/data \
-    && chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html \
-    && chmod -R 775 /var/www/html/data
+WORKDIR /app
 
-EXPOSE 80
+# Install runtime dependencies only (no dev/lint groups) so this layer is cached
+# until the lockfile changes and the image stays lean.
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-default-groups --locked
+
+# Application source.
+COPY . .
+
+# Vendored JS assets from the npm stage above (not committed to git).
+COPY --from=assets /assets/node_modules/htmx.org/dist/htmx.min.js static/conan/htmx.min.js
+
+# Collect static assets; WhiteNoise serves them. SECRET_KEY only needs to be
+# present, not real, for collectstatic.
+RUN SECRET_KEY=build python manage.py collectstatic --noinput
+
+# Run as a non-root user with fixed ids. /app stays root-owned and is only
+# world-readable, so the runtime user can read code/venv/static but cannot
+# modify them. Only /data — the SQLite volume — is writable by the app; see the
+# README for how the host/quadlet maps ownership.
+RUN groupadd -g 10001 app \
+    && useradd -u 10001 -g 10001 -m app \
+    && mkdir -p /data \
+    && chown 10001:10001 /data \
+    && chmod +x docker-entrypoint.sh
+USER 10001:10001
+
+VOLUME /data
+EXPOSE 8000
+
+# Liveness probe. A failing check makes `podman auto-update` roll back to the
+# previous image (the slim base has no curl, so use Python's stdlib). We connect
+# over loopback but send the real Host header (first entry of ALLOWED_HOSTS) so
+# production host validation stays strict — no need to allow-list localhost.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD python -c "import os, urllib.request as u; h=(os.environ.get('ALLOWED_HOSTS') or '127.0.0.1').split(',')[0].strip().lstrip('.') or '127.0.0.1'; u.urlopen(u.Request('http://127.0.0.1:8000/healthz', headers={'Host': h}), timeout=2)"
+
+ENTRYPOINT ["./docker-entrypoint.sh"]

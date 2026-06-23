@@ -1,0 +1,48 @@
+{% extends "concerts/base.html.jinja" %}
+{% block title %}CONAN — {{ concert.name or 'Concert' }}{% endblock %}
+
+{% block body %}
+<div class="site-header sticky">
+  <div class="header-inner">
+    <div class="header-top">
+      <a class="back-link" href="{{ url('list') }}">← Tous les concerts</a>
+      {% include "concerts/partials/title.html.jinja" %}
+      <span class="save-indicator" id="save-indicator">—</span>
+    </div>
+    {% include "concerts/partials/progress.html.jinja" %}
+  </div>
+</div>
+
+<div class="meta-section">
+  <div class="meta-card">
+    <div class="meta-field">
+      <span class="meta-label">Nom du concert</span>
+      <input class="meta-input" type="text" value="{{ concert.name }}" placeholder="—" name="value"
+        hx-post="{{ url('meta', args=[concert.pk]) }}" hx-vals='{"field": "name"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Date</span>
+      <input class="meta-input" type="text" value="{{ concert.date }}" placeholder="—" name="value"
+        hx-post="{{ url('meta', args=[concert.pk]) }}" hx-vals='{"field": "date"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Respo Negi</span>
+      <input class="meta-input" type="text" value="{{ concert.respo }}" placeholder="—" name="value"
+        hx-post="{{ url('meta', args=[concert.pk]) }}" hx-vals='{"field": "respo"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+    </div>
+    <div class="meta-field full">
+      <span class="meta-label">Contact mandataire</span>
+      <textarea class="meta-textarea" placeholder="Nom, téléphone, email…" name="value"
+        hx-post="{{ url('meta', args=[concert.pk]) }}" hx-vals='{"field": "mandataire"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">{{ concert.mandataire }}</textarea>
+    </div>
+  </div>
+</div>
+
+<div class="steps">
+  {% for step in steps %}{% include "concerts/partials/step.html.jinja" %}{% endfor %}
+</div>
+{% endblock %}

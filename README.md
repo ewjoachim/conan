@@ -1,62 +1,156 @@
-# CONAN — Déploiement
+# CONAN
 
-## Structure des fichiers
+Internal tool for the Negitachi association to track concert preparation through
+a structured checklist. One page lists the concerts; each concert has a
+checklist whose progress is saved as you go.
 
-```
-conan/
-├── Dockerfile         → Image PHP/Apache
-├── conan.container    → Podman Quadlet (systemd unit)
-├── index.php          → Page d'accueil (liste des concerts)
-├── new.php            → Création d'un nouveau concert
-├── .htaccess          → Routage des URLs
-├── concert/
-│   ├── index.php      → Checklist d'un concert
-│   └── save.php       → API de sauvegarde
-└── data/
-    └── concerts.json  → Données (créé automatiquement)
-```
+The UI is in French; the code, comments and this documentation are in English.
 
-## Déploiement via Podman Quadlet
+## Stack
 
-### 1. Builder l'image
+- **Django** (sync) + **Jinja2** templates
+- **HTMX** for server-driven interactivity (each toggle/edit posts a small
+  request; the server re-renders the affected fragment)
+- **SQLite** storage; checklist state is a JSON blob on the `Concert` model
+- **Granian** (WSGI) as the application server
+- **WhiteNoise** to serve static assets
+- **uv** for dependency management, **ruff** for lint/format, **ty** for type
+  checking, **prek** to run the hooks
+
+The checklist structure lives in [`concerts/checklist.py`](concerts/checklist.py)
+— edit that one module to change steps, items or progress rules.
+
+## Development
+
 ```bash
-podman build -t conan:latest .
+uv sync                       # create the virtualenv from uv.lock
+uv run manage.py migrate      # create ./data/conan.db
+
+# htmx is downloaded at build time in Docker; for local dev fetch it once:
+curl -fsSL https://unpkg.com/htmx.org@2.0.10/dist/htmx.min.js -o static/conan/htmx.min.js
+
+DEBUG=1 uv run manage.py runserver
+# or, to run the production server locally:
+DEBUG=1 uv run granian --interface wsgi --host 127.0.0.1 --port 8000 conan.wsgi:application
 ```
 
-### 2. Préparer le volume de données sur l'hôte
+Run the checks before committing:
+
 ```bash
-mkdir -p /opt/conan/data
-chmod 775 /opt/conan/data
+uv run ruff check . && uv run ruff format --check .
+uv run ty check
+uv run prek run --all-files
 ```
 
-### 3. Déployer le Quadlet
-Copier `conan.container` dans le dossier Quadlet approprié :
+### Configuration
+
+Settings are read from the environment (via `django-environ`):
+
+| Variable | Default | Notes |
+|---|---|---|
+| `SECRET_KEY` | dev fallback when `DEBUG=1` | **required in production** |
+| `DEBUG` | `False` | |
+| `ALLOWED_HOSTS` | `localhost,127.0.0.1` | comma-separated |
+| `CSRF_TRUSTED_ORIGINS` | empty | comma-separated, e.g. `https://conan.negitachi.fr` |
+| `DATABASE_PATH` | `./data/conan.db` (dev) | set to `/data/conan.db` in the container |
+| `TZ` | `Europe/Paris` | |
+
+## Docker image
+
+The image is built and pushed to `ghcr.io` by
+[`.github/workflows/release.yml`](.github/workflows/release.yml) on release.
+To build locally:
+
 ```bash
-# Pour un service système
-cp conan.container /etc/containers/systemd/
-
-# Ou pour un service utilisateur
-cp conan.container ~/.config/containers/systemd/
+docker build -t conan:latest .
 ```
 
-### 4. Recharger et démarrer
+The container runs as the non-root user `10001:10001`, listens on **port 8000**,
+runs migrations on startup, and stores the database under **`/data`** (declared
+as a volume). htmx is fetched at build time, so nothing is vendored in git.
+
+A `HEALTHCHECK` probes `/healthz` — a no-auth liveness endpoint that confirms the
+app booted and SQLite is reachable. The probe connects over loopback but sends
+the real `Host` header (taken from `ALLOWED_HOSTS`), so production host
+validation stays strict. Under Podman `AutoUpdate=registry`, a failing probe on a
+freshly pulled image rolls back to the previous one.
+
+## Example deployment using Podman Quadlet, rootful, via Ansible
+
+Here's an example with **rootful Podman** (root runs a system quadlet). The database
+lives on a **host bind mount** so it can be backed up directly.
+
+The writable-volume trick: under rootful Podman there is no UID remapping — the
+container UID maps 1:1 to the host UID. So set the container user to the host
+user that should own the files (e.g. `www-data`, UID 33), and `chown` the host
+directory to that same UID. No `keep-id` (that is rootless-only).
+
+Let's avoid writing the `SECRET_KEY` in plaintext into the quadlet unit
+file (it would land readable on disk on the server). Inject it as a **Podman
+secret** mounted into the container's environment; keep the value itself in an
+encrypted store (e.g. Ansible Vault), never in the playbook.
+
+Example Ansible task — adapt the host path, port and UID to your setup; this is
+illustrative, not copy-paste-perfect:
+
+```yaml
+- name: Create CONAN data dir
+  ansible.builtin.file:
+    path: /srv/conan/data
+    state: directory
+    owner: "33"          # www-data; must match the container `user` below
+    group: "33"
+    mode: "0750"
+
+# conan_secret_key comes from an encrypted store (Ansible Vault), not the playbook.
+- name: Store CONAN secret key in the Podman secret store
+  containers.podman.podman_secret:
+    name: conan_secret_key
+    state: present
+    data: "{{ conan_secret_key }}"
+
+- name: Deploy CONAN quadlet
+  containers.podman.podman_container:
+    name: conan
+    state: quadlet
+    image: ghcr.io/ewjoachim/conan:latest
+    user: "33:33"                  # rootful: container uid == host uid
+    env:
+      TZ: Europe/Paris
+      ALLOWED_HOSTS: conan.negitachi.fr
+      CSRF_TRUSTED_ORIGINS: https://conan.negitachi.fr
+      DATABASE_PATH: /data/conan.db
+    secrets:
+      # Mounts the secret as $SECRET_KEY in the container — never on disk in plaintext.
+      - "conan_secret_key,type=env,target=SECRET_KEY"
+    publish:
+      - "127.0.0.1:8080:8000"      # host:container — proxy 8080 to conan.negitachi.fr
+    volume:
+      - "/srv/conan/data:/data"    # bind mount → back this path up
+    quadlet_options:
+      - |
+        [Service]
+        Restart=always
+        RestartSec=5s
+```
+
+Then reload and start:
+
 ```bash
 systemctl daemon-reload
 systemctl start conan
-# ou pour un service utilisateur :
-systemctl --user daemon-reload
-systemctl --user start conan
 ```
 
-### 5. Vérifier
-```bash
-systemctl status conan
-podman logs conan
-```
+Proxy `https://conan.negitachi.fr` to `127.0.0.1:8080`.
 
-## Notes
+**Continuous delivery.** The quadlet sets `AutoUpdate=registry` + `Pull=newer`,
+so `podman-auto-update.timer` pulls a newly pushed `:latest` and restarts the
+container — no deploy step reaches into the server. The timer ships with a daily
+schedule; the role tightens it to every ~15 min via a drop-in. Combined with the
+image's healthcheck, a broken release is pulled, fails its probe, and is rolled
+back automatically.
 
-- Les données sont stockées dans `/opt/conan/data/concerts.json` sur l'hôte
-- Le conteneur écoute sur le port **8080** → à proxyfier vers `conan.negitachi.fr`
-- Le flag `:Z` sur le volume gère le contexte SELinux automatiquement
-- PHP 8.2, Apache avec mod_rewrite
+> If you ever move to **rootless** Podman (running the service as a specific
+> user), drop the `user:` line and instead map the in-container user to the host
+> user with `UserNS=keep-id:uid=10001,gid=10001`, owning the bind-mount dir with
+> that user.

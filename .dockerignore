@@ -1,0 +1,15 @@
+.git
+.venv
+.ruff_cache
+.ty_cache
+__pycache__
+*.pyc
+
+# Runtime / build artifacts — regenerated in the image
+data/
+staticfiles/
+static/conan/htmx.min.js
+
+# Local tooling
+.github
+.pre-commit-config.yaml

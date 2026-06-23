@@ -1,4 +1,0 @@
-RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^concert/([a-zA-Z0-9]+)$ concert/index.php [L,QSA]

@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+.venv
+.ruff_cache
+.ty_cache
+node_modules
+
+# Runtime data and collected static
+/data/
+/staticfiles/
+
+# Downloaded at build time, never committed
+/static/conan/htmx.min.js

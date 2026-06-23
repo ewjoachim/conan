@@ -1,0 +1,11 @@
+<div class="step {% if is_step_done(step, state) %}completed{% endif %} {% if step.parallel %}parallel{% endif %} open" id="step_{{ step.id }}">
+  <div class="step-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="step-num">{{ step.num }}</span>
+    <span class="step-title">{{ step.title }}</span>
+    {% if step.parallel %}<span class="step-badge">parallèle</span>{% endif %}
+    <span class="step-chevron">▼</span>
+  </div>
+  <div class="step-body">
+    {% for item in step.items %}{% include "concerts/partials/item.html.jinja" %}{% endfor %}
+  </div>
+</div>

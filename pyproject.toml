@@ -1,0 +1,84 @@
+[project]
+name = "conan"
+version = "0.1.0"
+authors = [
+    { name = "Joachim Jablon", email = "ewjoachim@gmail.com" },
+    { name = "Eve Jablon" },
+]
+description = "CONAN — concert preparation checklist for Négitachi"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "django>=5.2",
+    "django-environ>=0.12.0",
+    "granian>=2.0.0",
+    "jinja2>=3.1.0",
+    "whitenoise>=6.8.0",
+]
+
+[dependency-groups]
+lint = [
+    "ruff>=0.13.0",
+    "ty>=0.0.1",
+    "prek>=0.2.0",
+    "django-types>=0.24.0",
+    "zizmor>=1.0.0",
+]
+
+[tool.uv]
+# CONAN is a deployed application, not a distributable package: don't try to
+# build/install the project itself, just its dependencies.
+package = false
+# Install the lint tools by default so `uv run ruff/ty/zizmor` (used by the prek
+# hooks) resolve without an explicit --group flag.
+default-groups = ["lint"]
+
+[tool.ty.src]
+exclude = [".venv", "**/migrations"]
+
+[tool.ruff]
+target-version = "py314"
+
+[tool.ruff.lint]
+preview = true
+extend-select = [
+    "E",   # pycodestyle (Error)
+    "W",   # pycodestyle (Warning)
+    "F",   # pyflakes
+    "S",   # flake8-bandit
+    "UP",  # pyupgrade
+    "PL",  # pylint
+    "TID", # flake8-tidy-imports
+    "N",   # pep8-naming
+    "B",   # flake8-bugbear
+    "A",   # flake8-builtins
+    "SLF", # flake8-self
+    "T20", # flake8-print
+    "ICN", # flake8-import-conventions
+    "RUF", # ruff (RUFF specific rules)
+    "Q",   # flake8-quotes
+    "T10", # flake8-debugger
+    "I",   # isort
+]
+ignore = [
+    "PLR0911", # https://docs.astral.sh/ruff/rules/too-many-return-statements/
+    "PLR0912", # https://docs.astral.sh/ruff/rules/too-many-branches/
+    "PLR0913", # https://docs.astral.sh/ruff/rules/too-many-arguments/
+    "PLR0915", # https://docs.astral.sh/ruff/rules/too-many-statements/
+    "RUF029",  # https://docs.astral.sh/ruff/rules/unused-async/
+    "N818",    # https://docs.astral.sh/ruff/rules/error-suffix-on-exception-name/
+    "PLR2004", # https://docs.astral.sh/ruff/rules/magic-value-comparison/
+    "S324",    # https://docs.astral.sh/ruff/rules/hashlib-insecure-hash-function/
+    "PLW1514", # https://docs.astral.sh/ruff/rules/unspecified-encoding/
+    "PLR6301", # https://docs.astral.sh/ruff/rules/no-self-use/
+    "RUF012",  # mutable class attrs: false-positive on Django Meta/migrations
+]
+fixable = ["ALL"]
+unfixable = ["T201"]
+extend-ignore = [
+    "E501", # line too long
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Standard Django manage.py defers the import inside main() on purpose.
+"manage.py" = ["PLC0415"]

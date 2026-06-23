@@ -1,0 +1,61 @@
+{% extends "concerts/base.html.jinja" %}
+{% block title %}CONAN — Négitachi{% endblock %}
+
+{% block body %}
+<div class="site-header">
+  <div class="header-inner">
+    <h1>CONAN <span>/ Gestion des concerts</span></h1>
+    <p>Négitachi — outil interne</p>
+  </div>
+</div>
+<div class="main">
+  <div class="top-bar">
+    <span class="section-title">{{ count }} concert{{ 's' if count > 1 else '' }}</span>
+    <button class="btn-new" onclick="document.getElementById('modal').classList.add('open')">+ Nouveau concert</button>
+  </div>
+  <div class="concert-list">
+    {% if not concerts %}
+      <div class="empty-state"><div style="font-size:2rem">🎵</div><p>Aucun concert pour l'instant.<br>Crée le premier !</p></div>
+    {% else %}
+      {% for c in concerts %}
+        <a class="concert-card" href="{{ url('detail', args=[c.pk]) }}">
+          <div class="concert-info">
+            <div class="concert-name">{{ c.name or 'Concert sans nom' }}</div>
+            {% set meta = [c.date, c.respo] | select | join(' · ') %}
+            {% if meta %}<div class="concert-meta">{{ meta }}</div>{% endif %}
+          </div>
+          <div class="concert-prog">
+            <span class="prog-pct">{{ c.progress }}%</span>
+            <div class="prog-bar"><div class="prog-bar-fill" style="width:{{ c.progress }}%"></div></div>
+          </div>
+        </a>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <h2>Nouveau concert</h2>
+    <form method="POST" action="{{ url('create') }}">
+      {{ csrf_input }}
+      <div class="form-field">
+        <label class="form-label" for="name">Nom du concert</label>
+        <input class="form-input" type="text" id="name" name="name" placeholder="Ex : Jonetachi 2025" required autofocus>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="date">Date</label>
+        <input class="form-input" type="text" id="date" name="date" placeholder="Ex : 15 mars 2025">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="respo">Respo Negi</label>
+        <input class="form-input" type="text" id="respo" name="respo" placeholder="Prénom">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" onclick="document.getElementById('modal').classList.remove('open')">Annuler</button>
+        <button type="submit" class="btn-create">Créer →</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
