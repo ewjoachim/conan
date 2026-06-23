@@ -79,8 +79,13 @@ container UID maps 1:1 to the host UID. So set the container user to the host
 user that should own the files (e.g. `www-data`, UID 33), and `chown` the host
 directory to that same UID. No `keep-id` (that is rootless-only).
 
-Example Ansible task — adapt the host path, port, secrets and UID to your setup;
-this is illustrative, not copy-paste-perfect:
+The `SECRET_KEY` must **never** be written in plaintext into the quadlet unit
+file (it would land readable on disk on the server). Inject it as a **Podman
+secret** mounted into the container's environment; keep the value itself in an
+encrypted store (e.g. Ansible Vault), never in the playbook.
+
+Example Ansible task — adapt the host path, port and UID to your setup; this is
+illustrative, not copy-paste-perfect:
 
 ```yaml
 - name: Create CONAN data dir
@@ -91,6 +96,13 @@ this is illustrative, not copy-paste-perfect:
     group: "33"
     mode: "0750"
 
+# conan_secret_key comes from an encrypted store (Ansible Vault), not the playbook.
+- name: Store CONAN secret key in the Podman secret store
+  containers.podman.podman_secret:
+    name: conan_secret_key
+    state: present
+    data: "{{ conan_secret_key }}"
+
 - name: Deploy CONAN quadlet
   containers.podman.podman_container:
     name: conan
@@ -99,10 +111,12 @@ this is illustrative, not copy-paste-perfect:
     user: "33:33"                  # rootful: container uid == host uid
     env:
       TZ: Europe/Paris
-      SECRET_KEY: "{{ conan_secret_key }}"
       ALLOWED_HOSTS: conan.negitachi.fr
       CSRF_TRUSTED_ORIGINS: https://conan.negitachi.fr
       DATABASE_PATH: /data/conan.db
+    secrets:
+      # Mounts the secret as $SECRET_KEY in the container — never on disk in plaintext.
+      - "conan_secret_key,type=env,target=SECRET_KEY"
     publish:
       - "127.0.0.1:8080:8000"      # host:container — proxy 8080 to conan.negitachi.fr
     volume:
