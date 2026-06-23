@@ -1,3 +1,10 @@
+# Frontend assets: fetch JS deps (htmx, ...) via npm so they're integrity-checked
+# by package-lock.json and tracked by Renovate. Add deps with `npm install <pkg>`.
+FROM node:22-slim@sha256:b1e7fcc44bd47f2d186de26c1202345369e7f1028b08956e75cfb52ad8e483f9 AS assets
+WORKDIR /assets
+COPY package.json package-lock.json ./
+RUN npm ci
+
 FROM python:3.14-slim@sha256:44dd04494ee8f3b538294360e7c4b3acb87c8268e4d0a4828a6500b1eff50061
 
 # uv from the official image (no pip middleman).
@@ -20,8 +27,8 @@ RUN uv sync --no-default-groups --locked
 # Application source.
 COPY . .
 
-# htmx is not vendored in git: fetch the pinned version at build time.
-ADD https://unpkg.com/htmx.org@2.0.10/dist/htmx.min.js static/conan/htmx.min.js
+# Vendored JS assets from the npm stage above (not committed to git).
+COPY --from=assets /assets/node_modules/htmx.org/dist/htmx.min.js static/conan/htmx.min.js
 
 # Collect static assets; WhiteNoise serves them. SECRET_KEY only needs to be
 # present, not real, for collectstatic.

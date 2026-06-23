@@ -1,0 +1,8 @@
+{
+  "name": "conan",
+  "private": true,
+  "description": "Frontend assets, vendored into the image at build time. Add JS deps here (npm install <pkg>); Renovate keeps them and the lockfile current.",
+  "dependencies": {
+    "htmx.org": "2.0.10"
+  }
+}

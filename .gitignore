@@ -3,6 +3,7 @@ __pycache__
 .venv
 .ruff_cache
 .ty_cache
+node_modules
 
 # Runtime data and collected static
 /data/
