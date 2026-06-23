@@ -34,12 +34,14 @@ COPY --from=assets /assets/node_modules/htmx.org/dist/htmx.min.js static/conan/h
 # present, not real, for collectstatic.
 RUN SECRET_KEY=build python manage.py collectstatic --noinput
 
-# Run as a non-root user with fixed ids. /data is the writable volume holding
-# the SQLite database; see the README for how the host/quadlet maps ownership.
+# Run as a non-root user with fixed ids. /app stays root-owned and is only
+# world-readable, so the runtime user can read code/venv/static but cannot
+# modify them. Only /data — the SQLite volume — is writable by the app; see the
+# README for how the host/quadlet maps ownership.
 RUN groupadd -g 10001 app \
     && useradd -u 10001 -g 10001 -m app \
     && mkdir -p /data \
-    && chown -R 10001:10001 /app /data \
+    && chown 10001:10001 /data \
     && chmod +x docker-entrypoint.sh
 USER 10001:10001
 
