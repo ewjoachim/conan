@@ -12,7 +12,7 @@ from django.urls import reverse
 from jinja2 import Environment
 
 from conan._version import __version__ as conan_version
-from concerts import checklist
+from conan.concerts import checklist
 
 
 def environment(**options: Any) -> Environment:

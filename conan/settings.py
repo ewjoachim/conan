@@ -29,7 +29,7 @@ CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
 INSTALLED_APPS = [
     "django.contrib.staticfiles",
-    "concerts",
+    "conan.concerts",
 ]
 
 MIDDLEWARE = [
