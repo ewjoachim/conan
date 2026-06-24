@@ -1,4 +1,4 @@
-{% extends "concerts/base.html.jinja" %}
+{% extends "base.html.jinja" %}
 {% block title %}CONAN — Negitachi{% endblock %}
 
 {% block body %}
@@ -6,6 +6,13 @@
   <div class="header-inner">
     <h1>CONAN <span>/ Gestion des concerts</span></h1>
     <p>Negitachi — outil interne</p>
+    {% if request.user.is_authenticated %}
+    <form class="user-bar" method="POST" action="{{ url('logout') }}">
+      {{ csrf_input }}
+      <span class="user-email">{{ request.user.email }}</span>
+      <button type="submit" class="btn-logout">Déconnexion</button>
+    </form>
+    {% endif %}
   </div>
 </div>
 <div class="main">

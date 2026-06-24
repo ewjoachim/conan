@@ -1,0 +1,56 @@
+{% extends "base.html.jinja" %}
+{% block title %}CONAN — Connexion{% endblock %}
+
+{% block body %}
+<div class="login-page">
+  <div class="login-card">
+    <div class="login-brand">CONAN</div>
+    <p class="login-sub">Gestion des concerts — Negitachi</p>
+    {% if google_client_id %}
+      <div id="g_id_onload"
+           data-client_id="{{ google_client_id }}"
+           data-callback="onSignIn"
+           data-auto_prompt="false"></div>
+      <div class="g_id_signin"
+           data-type="standard"
+           data-shape="pill"
+           data-theme="outline"
+           data-text="signin_with"
+           data-locale="fr"></div>
+      <p class="login-error" id="login-error" hidden></p>
+    {% else %}
+      <p class="login-error">La connexion n'est pas configurée.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if google_client_id %}
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script>
+  function onSignIn(response) {
+    var err = document.getElementById('login-error');
+    err.hidden = true;
+    fetch("{{ url('google_callback') }}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": "{{ csrf_token }}",
+      },
+      body: "credential=" + encodeURIComponent(response.credential),
+    }).then(function (r) {
+      if (r.ok) {
+        window.location = "{{ url('list') }}";
+      } else {
+        err.hidden = false;
+        err.textContent = "Connexion refusée : ce compte n'est pas autorisé.";
+      }
+    }).catch(function () {
+      err.hidden = false;
+      err.textContent = "Erreur de connexion. Réessaie.";
+    });
+  }
+</script>
+{% endif %}
+{% endblock %}

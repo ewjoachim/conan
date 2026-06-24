@@ -145,3 +145,18 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 
 /* Footer — full-width green bar matching the header */
 .version-footer{background:var(--green);color:rgba(255,255,255,.65);text-align:center;padding:.85rem 1rem;font-size:.7rem;font-family:'Josefin Sans',sans-serif;letter-spacing:.06em;}
+
+/* Login page */
+.login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+.login-card{background:var(--white);border:1.5px solid var(--border);border-radius:12px;padding:2.5rem 2rem;width:100%;max-width:360px;text-align:center;box-shadow:0 4px 24px rgba(58,125,68,.1);}
+.login-brand{font-family:'Josefin Sans',sans-serif;font-weight:700;font-size:1.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--green);}
+.login-sub{font-size:.82rem;color:var(--muted);margin:.4rem 0 1.75rem;}
+.login-card .g_id_signin{display:flex;justify-content:center;}
+.login-error{margin-top:1rem;font-size:.82rem;color:#b3261e;}
+
+/* User bar / logout (shared header) */
+.user-bar{display:flex;align-items:center;gap:.6rem;margin-top:.6rem;}
+.header-top .user-bar{margin-top:0;flex-shrink:0;}
+.user-email{font-size:.75rem;color:rgba(255,255,255,.7);font-family:'Josefin Sans',sans-serif;letter-spacing:.03em;}
+.btn-logout{font-family:'Josefin Sans',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.3rem .7rem;background:rgba(255,255,255,.14);color:white;border:1px solid rgba(255,255,255,.3);border-radius:5px;cursor:pointer;transition:background .15s;}
+.btn-logout:hover{background:rgba(255,255,255,.26);}

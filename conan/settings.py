@@ -15,6 +15,12 @@ env = environ.Env(
     DEBUG=(bool, False),
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
     CSRF_TRUSTED_ORIGINS=(list, []),
+    # "Sign in with Google" (GIS ID-token flow): only the public client id is
+    # needed — there is no OAuth client *secret* in this flow. GOOGLE_ALLOWED_DOMAIN
+    # restricts sign-in to one Workspace domain; an empty value fails closed in
+    # production.
+    GOOGLE_OAUTH_CLIENT_ID=(str, ""),
+    GOOGLE_ALLOWED_DOMAIN=(str, "negitachi.fr"),
     # In prod the DB lives on the mounted volume at /data; dev defaults to ./data.
     DATABASE_PATH=(str, str(BASE_DIR / "data" / "conan.db")),
 )
@@ -27,16 +33,33 @@ SECRET_KEY = env("SECRET_KEY", default="dev-insecure-key-change-me" if DEBUG els
 ALLOWED_HOSTS = env("ALLOWED_HOSTS")
 CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
+# Google Sign-In (see accounts.views for the flow and security notes).
+GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID")
+GOOGLE_ALLOWED_DOMAIN = env("GOOGLE_ALLOWED_DOMAIN")
+
+# Anonymous users hitting a login-required view are redirected here.
+LOGIN_URL = "login"
+
 INSTALLED_APPS = [
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
     "django.contrib.staticfiles",
+    "conan.accounts",
     "conan.concerts",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    # Require auth for *every* view by default; opt out with @login_not_required
+    # (healthz, the login page, the Google callback). Fail closed: a new view is
+    # protected unless it explicitly says otherwise.
+    "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
@@ -46,7 +69,9 @@ WSGI_APPLICATION = "conan.wsgi.application"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.jinja2.Jinja2",
-        "DIRS": [],
+        # Project-level shared templates (e.g. the base layout) live here, so they
+        # don't belong to any single app; per-app templates use APP_DIRS below.
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "environment": "conan.jinja2_env.environment",

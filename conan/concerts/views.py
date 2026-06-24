@@ -10,6 +10,11 @@ piggy-back an out-of-band swap of the header progress bar. Free-text saves are
 silent (HTTP 204) so the user's textarea keeps focus while typing.
 """
 
+# login_not_required exists since Django 5.1 (our floor is 5.2); the django-types
+# stubs lag behind, so silence ty's import error here.
+from django.contrib.auth.decorators import (
+    login_not_required,  # ty: ignore[unresolved-import]
+)
 from django.db import connection, transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
@@ -22,6 +27,7 @@ from .models import Concert
 META_FIELDS = frozenset(["name", "date", "respo", "mandataire"])
 
 
+@login_not_required
 def healthz(request: HttpRequest) -> HttpResponse:
     """Liveness probe for the container healthcheck.
 
