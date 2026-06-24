@@ -1,6 +1,17 @@
+[build-system]
+requires = ["hatchling", "uv-dynamic-versioning"]
+build-backend = "hatchling.build"
+
+[tool.hatch.version]
+source = "uv-dynamic-versioning"
+
+[tool.uv-dynamic-versioning]
+pattern = "default-unprefixed"
+fallback-version = "0.0.0"
+
 [project]
 name = "conan"
-version = "0.1.0"
+dynamic = ["version"]
 authors = [
     { name = "Joachim Jablon", email = "ewjoachim@gmail.com" },
     { name = "Eve Jablon" },
@@ -26,9 +37,16 @@ lint = [
 ]
 
 [tool.uv]
-# CONAN is a deployed application, not a distributable package: don't try to
-# build/install the project itself, just its dependencies.
-package = false
+# CONAN is a deployed application, not a distributable package, but we do build
+# and install it in the venv so the version metadata (via uv-dynamic-versioning)
+# is resolvable by importlib.metadata at runtime.
+package = true
+# Tell uv that the project's metadata depends on git state (for version); this
+# prevents stale cached builds when the version changes.
+cache-keys = [
+    { file = "pyproject.toml" },
+    { git = { commit = true, tags = true } },
+]
 # Install the lint tools by default so `uv run ruff/ty/zizmor` (used by the prek
 # hooks) resolve without an explicit --group flag.
 default-groups = ["lint"]

@@ -6,7 +6,10 @@
   --cond-bg:#f0f8f1;--yesno-bg:#eef6ef;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--ink);min-height:100vh;padding:0 0 5rem;}
+body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--ink);display:flex;flex-direction:column;min-height:100vh;}
+
+/* Push the footer to the bottom of the viewport on short pages. */
+.version-footer{margin-top:auto;}
 
 /* Header (shared) */
 .site-header{background:var(--green);padding:1.25rem 1.25rem 1rem;box-shadow:0 2px 12px rgba(30,69,38,.18);}
@@ -139,3 +142,6 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .sub-check.checked::after{content:'';display:block;width:7px;height:4px;border-left:1.5px solid white;border-bottom:1.5px solid white;transform:rotate(-45deg) translateY(-1px);}
 .sub-label{font-size:.83rem;cursor:pointer;flex:1;font-weight:600;}
 .sub-label.done{text-decoration:line-through;color:var(--muted);font-weight:400;}
+
+/* Footer — full-width green bar matching the header */
+.version-footer{background:var(--green);color:rgba(255,255,255,.65);text-align:center;padding:.85rem 1rem;font-size:.7rem;font-family:'Josefin Sans',sans-serif;letter-spacing:.06em;}

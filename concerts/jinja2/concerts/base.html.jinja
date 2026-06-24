@@ -10,6 +10,8 @@
 <body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
   {% block body %}{% endblock %}
 
+  <footer class="version-footer">CONAN v{{ conan_version }}</footer>
+
   <script>
     // Drive the header save indicator from HTMX request lifecycle events.
     function setSave(state) {

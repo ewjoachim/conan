@@ -12,6 +12,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.11.24@sha256:99ea34acedc870ba4ad11a1f540a1c04
 
 ENV UV_LINK_MODE=copy \
     UV_COMPILE_BYTECODE=1 \
+    UV_FROZEN=1 \
     PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     DJANGO_SETTINGS_MODULE=conan.settings \
@@ -20,29 +21,35 @@ ENV UV_LINK_MODE=copy \
 WORKDIR /app
 
 # Install runtime dependencies only (no dev/lint groups) so this layer is cached
-# until the lockfile changes and the image stays lean.
-COPY pyproject.toml uv.lock ./
-RUN uv sync --no-default-groups --locked
-
-# Application source.
-COPY . .
+# until the lockfile changes and the image stays lean.  BUILD_VERSION is
+# forwarded to uv-dynamic-versioning so the package metadata carries the real
+# version; CI supplies the tag-derived version, default is 0.0.0.
+ARG BUILD_VERSION=0.0.0
+COPY pyproject.toml README.md uv.lock ./
+# --no-install-project skips building/installing the app itself — only deps —
+# so this layer stays valid as long as the lockfile doesn't change.
+RUN UV_DYNAMIC_VERSIONING_BYPASS="$BUILD_VERSION" uv sync --no-default-groups --no-install-project
 
 # Vendored JS assets from the npm stage above (not committed to git).
 COPY --from=assets /assets/node_modules/htmx.org/dist/htmx.min.js static/conan/htmx.min.js
+
+# Non-root user setup — no application source needed for this.
+RUN groupadd -g 10001 app \
+    && useradd -u 10001 -g 10001 -m app \
+    && mkdir -p /data \
+    && chown 10001:10001 /data
+
+# Application source — as late as possible so code changes don't invalidate
+# the dependency, vendor-asset and system-setup layers above.
+COPY . ./
+
+# Install the project itself (fast, deps are already in the venv).
+RUN UV_DYNAMIC_VERSIONING_BYPASS="$BUILD_VERSION" uv sync --no-default-groups
 
 # Collect static assets; WhiteNoise serves them. SECRET_KEY only needs to be
 # present, not real, for collectstatic.
 RUN SECRET_KEY=build python manage.py collectstatic --noinput
 
-# Run as a non-root user with fixed ids. /app stays root-owned and is only
-# world-readable, so the runtime user can read code/venv/static but cannot
-# modify them. Only /data — the SQLite volume — is writable by the app; see the
-# README for how the host/quadlet maps ownership.
-RUN groupadd -g 10001 app \
-    && useradd -u 10001 -g 10001 -m app \
-    && mkdir -p /data \
-    && chown 10001:10001 /data \
-    && chmod +x docker-entrypoint.sh
 USER 10001:10001
 
 VOLUME /data

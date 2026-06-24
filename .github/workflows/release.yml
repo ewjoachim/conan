@@ -51,3 +51,5 @@ jobs:
           push: ${{ github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_VERSION=${{ steps.meta.outputs.version || '0.0.0' }}

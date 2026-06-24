@@ -11,6 +11,7 @@ from django.templatetags.static import static
 from django.urls import reverse
 from jinja2 import Environment
 
+from conan._version import __version__ as conan_version
 from concerts import checklist
 
 
@@ -28,6 +29,8 @@ def environment(**options: Any) -> Environment:
     g["url"] = reverse
     # Checklist rendering helpers, so partials can render any item type.
     g["item_done"] = checklist.item_done
+    # App version for the footer.
+    g["conan_version"] = conan_version
     g["is_step_done"] = checklist.is_step_done
     g["is_cotech_done"] = checklist.is_cotech_done
     g["COTECH_OPTIONS"] = checklist.COTECH_OPTIONS
