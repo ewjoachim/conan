@@ -1,4 +1,4 @@
-name: Build and Push to GHCR
+name: Release
 
 # Prod image path. PRs are handled by pr-preview.yml (which builds the same
 # Dockerfile against Artifact Registry), so this workflow no longer builds on
@@ -87,7 +87,6 @@ jobs:
       && needs.release.result != 'failure'
       && needs.release.result != 'cancelled'
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
