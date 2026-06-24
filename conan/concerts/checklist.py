@@ -163,33 +163,30 @@ STEPS: tuple[Step, ...] = (
         ),
     ),
     Step(
-        id="s3",
-        num="Étape 3",
-        title="Suivi de la préparation",
-        items=(
-            Item(id="s3_1", label="PL reçue des Wacos"),
-            Item(id="s3_2", label="PL dans Moodle"),
-            Item(id="s3_3", label="PL envoyée par mail"),
-            Item(
-                id="s3_5",
-                label="SACEM ?",
-                type="yesno",
-                subs=(
-                    Sub(id="s3_5a", label="Contacter Lia (ou sa succession)"),
-                    Sub(id="s3_5b", label="Effectuer la déclaration SACEM"),
-                    Sub(
-                        id="s3_5c",
-                        label="Conserver la confirmation dans le dossier concert",
-                    ),
-                ),
-            ),
-            Item(
-                id="s3_6",
-                label="Confirmation du mandataire reçue",
-                hint="Date, heure, durée, format revalidés + salle d'échauffement + sono ok.",
+    id="s3",
+    num="Étape 3",
+    title="Suivi de la préparation",
+    items=(
+        Item(
+            id="s3_6",
+            label="Confirmation du mandataire reçue",
+            hint="Date, heure, durée, format revalidés + salle d'échauffement + sono ok.",
+        ),
+        Item(id="s3_1", label="PL reçue des Wacos"),
+        Item(id="s3_2", label="PL dans Moodle"),
+        Item(id="s3_3", label="PL envoyée par mail"),
+        Item(
+            id="s3_5",
+            label="SACEM ?",
+            type="yesno",
+            subs=(
+                Sub(id="s3_5a", label="Contacter Lia (ou sa succession)"),
+                Sub(id="s3_5b", label="Effectuer la déclaration SACEM"),
+                Sub(id="s3_5c", label="Conserver la confirmation dans le dossier concert"),
             ),
         ),
     ),
+),
     Step(
         id="s4",
         num="Étape 4",
