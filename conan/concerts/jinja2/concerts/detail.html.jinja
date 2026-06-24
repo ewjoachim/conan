@@ -8,6 +8,12 @@
       <a class="back-link" href="{{ url('list') }}">← Tous les concerts</a>
       {% include "concerts/partials/title.html.jinja" %}
       <span class="save-indicator" id="save-indicator">—</span>
+      {% if request.user.is_authenticated %}
+      <form class="user-bar" method="POST" action="{{ url('logout') }}">
+        {{ csrf_input }}
+        <button type="submit" class="btn-logout">Déconnexion</button>
+      </form>
+      {% endif %}
     </div>
     {% include "concerts/partials/progress.html.jinja" %}
   </div>
