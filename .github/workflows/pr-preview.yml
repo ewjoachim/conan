@@ -1,0 +1,170 @@
+name: PR preview (Cloud Run)
+
+# Per-PR ephemeral preview on Cloud Run, in the personal GCP project "negitachi".
+# Auth is keyless via Workload Identity Federation (no service-account JSON key).
+# Previews run with DEBUG=True, which auto-logs-in as a root superuser and needs
+# no Google OAuth or SECRET_KEY — convenient and disposable. The DB is a fresh
+# SQLite file in the in-memory filesystem, reset on every cold start.
+#
+# Cost guardrails live in GCP, not here: max-instances=1, scale-to-zero, an
+# Artifact Registry image that is deleted on PR close, and a EUR1 budget that
+# auto-disables billing if anything ever runs away.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions: {}
+
+env:
+  PROJECT_ID: negitachi
+  PROJECT_NUMBER: "797754601726"
+  REGION: europe-west9
+  AR_REPO: conan
+  RUNTIME_SA: conan-preview-runtime@negitachi.iam.gserviceaccount.com
+  DEPLOY_SA: github-deployer@negitachi.iam.gserviceaccount.com
+  WIF_PROVIDER: projects/797754601726/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+
+# One run per PR. A new push cancels an in-flight deploy; closing the PR cancels
+# any in-flight deploy and then tears down.
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  # Build + push the preview image to Artifact Registry. This is the job to
+  # require as a PR status check: it proves the image builds and is pushed,
+  # without coupling merge to whether the Cloud Run deploy/boot succeeds.
+  build:
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # mint the OIDC token for WIF
+    env:
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Authenticate to GCP (Workload Identity Federation)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Build and push image to Artifact Registry
+        run: |
+          set -euo pipefail
+          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/conan:pr-${PR}"
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+  # Deploy the already-built image to Cloud Run and post the preview URL.
+  # Not a good required check: depends on the app actually booting in prod-like
+  # conditions, plus Cloud Run availability.
+  deploy:
+    needs: [build]
+    if: github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write # mint the OIDC token for WIF
+      pull-requests: write # upsert the preview-URL comment
+    env:
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Authenticate to GCP (Workload Identity Federation)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        run: |
+          set -euo pipefail
+          SERVICE="conan-pr-${PR}"
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/conan:pr-${PR}"
+          # Cloud Run deterministic URL: <service>-<project-number>.<region>.run.app
+          HOST="${SERVICE}-${PROJECT_NUMBER}.${REGION}.run.app"
+
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$REGION" \
+            --platform managed \
+            --port 8000 \
+            --service-account "$RUNTIME_SA" \
+            --max-instances 1 \
+            --allow-unauthenticated \
+            --set-env-vars "DEBUG=True,ALLOWED_HOSTS=${HOST},CSRF_TRUSTED_ORIGINS=https://${HOST},DATABASE_PATH=/tmp/conan.db" \
+            --quiet
+
+          ACTUAL_URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
+          ACTUAL_HOST="${ACTUAL_URL#https://}"
+
+          # Safety net: if the URL wasn't the predicted deterministic one, fix the
+          # host allowlist so the app doesn't 400 on DisallowedHost.
+          if [ "$ACTUAL_HOST" != "$HOST" ]; then
+            echo "::warning::Predicted host ${HOST} != actual ${ACTUAL_HOST}; reconciling env vars"
+            gcloud run services update "$SERVICE" --region "$REGION" --quiet \
+              --update-env-vars "ALLOWED_HOSTS=${ACTUAL_HOST},CSRF_TRUSTED_ORIGINS=https://${ACTUAL_HOST}"
+          fi
+
+          echo "url=${ACTUAL_URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Comment preview URL on the PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          URL: ${{ steps.deploy.outputs.url }}
+        run: |
+          set -euo pipefail
+          MARKER="<!-- conan-preview -->"
+          BODY="$(printf '%s\n🚀 **Preview déployée :** %s\n\n_Connexion auto en root (DEBUG=True). Base SQLite éphémère, réinitialisée à chaque démarrage à froid. Détruite à la fermeture de la PR._' "$MARKER" "$URL")"
+          # Upsert a single marker comment instead of spamming on every push.
+          ID="$(gh api "repos/${REPO}/issues/${PR}/comments" --jq "[.[] | select(.body | startswith(\"${MARKER}\"))][0].id // empty")"
+          if [ -n "$ID" ]; then
+            gh api -X PATCH "repos/${REPO}/issues/comments/${ID}" -f body="$BODY" >/dev/null
+          else
+            gh api -X POST "repos/${REPO}/issues/${PR}/comments" -f body="$BODY" >/dev/null
+          fi
+
+  teardown:
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - name: Authenticate to GCP (Workload Identity Federation)
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOY_SA }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Delete Cloud Run service and preview image
+        run: |
+          set -uo pipefail
+          SERVICE="conan-pr-${PR}"
+          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/conan:pr-${PR}"
+          # Both are best-effort: a re-run after a partial teardown must still succeed.
+          gcloud run services delete "$SERVICE" --region "$REGION" --quiet || true
+          gcloud artifacts docker images delete "$IMAGE" --delete-tags --quiet || true

@@ -1,9 +1,12 @@
 name: Build and Push to GHCR
 
+# Prod image path. PRs are handled by pr-preview.yml (which builds the same
+# Dockerfile against Artifact Registry), so this workflow no longer builds on
+# pull_request — that avoids building the image twice for a single PR event.
+
 on:
   push:
     branches: [main]
-  pull_request:
   release:
     types: [published]
   workflow_dispatch:
@@ -77,7 +80,7 @@ jobs:
 
   build-and-push:
     needs: [release]
-    # Run after a manual release, and also for push/PR/release events where the
+    # Run after a manual release, and also for push/release events where the
     # release job is skipped (a skipped dependency must not block this job).
     if: >-
       always()
