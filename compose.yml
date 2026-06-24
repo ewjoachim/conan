@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: .
+      # For local dev, don't bother passing a BUILD_VERSION — the Dockerfile
+      # defaults to 0.0.0, which is fine.
+    ports:
+      - "8000:8000"
+    volumes:
+      # Bind-mount the source tree so runserver picks up changes immediately.
+      # .venv comes from the image build — the host doesn't have one, so it
+      # would shadow the image's venv if we mounted the entire root. Instead
+      # we mount the specific source paths the app needs at runtime.
+      - ./conan:/app/conan
+      - ./manage.py:/app/manage.py
+      - ./static:/app/static
+      # Persistent SQLite database (matches DATABASE_PATH from settings).
+      - ./data:/data
+    environment:
+      - DEBUG=1
+      - SECRET_KEY=compose-dev-insecure
+      - DATABASE_PATH=/data/conan.db
+      - TZ=Europe/Paris
+    # Override the production entrypoint to use Django's dev server (auto-reload
+    # on source changes). Use the full path so the venv's python is resolved.
+    command: python manage.py runserver 0.0.0.0:8000
