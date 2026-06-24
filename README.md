@@ -52,8 +52,48 @@ Settings are read from the environment (via `django-environ`):
 | `DEBUG` | `False` | |
 | `ALLOWED_HOSTS` | `localhost,127.0.0.1` | comma-separated |
 | `CSRF_TRUSTED_ORIGINS` | empty | comma-separated, e.g. `https://conan.negitachi.fr` |
+| `GOOGLE_OAUTH_CLIENT_ID` | empty | OAuth **client ID** for Sign in with Google (no secret — see below) |
+| `GOOGLE_ALLOWED_DOMAIN` | `negitachi.fr` | only verified addresses on this domain may sign in |
 | `DATABASE_PATH` | `./data/conan.db` (dev) | set to `/data/conan.db` in the container |
 | `TZ` | `Europe/Paris` | |
+
+### Authentication
+
+Every page requires login except `/healthz`. Sign-in uses **Google Identity
+Services (the ID-token flow)**: the "Sign in with Google" button hands the
+browser a signed ID token (a JWT), which is POSTed to `/auth/google/`; the server
+verifies it (signature, **audience = our client ID**, issuer, expiry) with
+**PyJWT** and starts a normal Django session. This flow is pure authentication,
+so there is **no OAuth client secret** to store anywhere — only the public
+`GOOGLE_OAUTH_CLIENT_ID`.
+
+Verifying a token only proves *which* Google account it is, not that the account
+belongs here, so access is restricted to one Workspace domain via
+`GOOGLE_ALLOWED_DOMAIN` (default `negitachi.fr`): only a Google-*verified* address
+on that domain may sign in. With the domain unset the app **fails closed in
+production** (nobody can sign in) and, only when `DEBUG=1`, admits any verified
+Google account for local convenience. Users are keyed on Google's stable `sub`,
+never the mutable email.
+
+#### Getting `GOOGLE_OAUTH_CLIENT_ID`
+
+The client ID is required; without it the login page shows "not configured". To
+create one (no billing or app verification needed for an internal tool):
+
+1. In the [Google Cloud Console](https://console.cloud.google.com/), pick or
+   create a project.
+2. **APIs & Services → OAuth consent screen**: set User type to *Internal* if the
+   domain is a Workspace org (only members can then sign in), otherwise *External*.
+   Fill in the app name and support email.
+3. **APIs & Services → Credentials → Create credentials → OAuth client ID**, with
+   application type **Web application**.
+4. Under **Authorized JavaScript origins**, add each origin the button loads from
+   — `https://conan.negitachi.fr` for prod and `http://localhost:8000` for local
+   dev. Leave **Authorized redirect URIs** empty: the ID-token flow doesn't use a
+   redirect.
+5. Create it and copy the **Client ID** (it ends in `.apps.googleusercontent.com`).
+   That value is `GOOGLE_OAUTH_CLIENT_ID`. Ignore the client *secret* — this flow
+   never uses it.
 
 ## Docker image
 
