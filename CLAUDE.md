@@ -29,7 +29,7 @@ overview and dev/run instructions; this file captures the conventions and the
   `chore:`). One concern per commit — if a single file's diff mixes two concerns
   (e.g. a Dockerfile that gains a feature *and* a hardening change), split it
   into separate commits.
-- Commit only when asked.
+- Commit early, commit often.
 
 ## Architecture conventions
 
