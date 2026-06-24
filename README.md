@@ -75,6 +75,16 @@ production** (nobody can sign in) and, only when `DEBUG=1`, admits any verified
 Google account for local convenience. Users are keyed on Google's stable `sub`,
 never the mutable email.
 
+The token-to-user step is a Django **auth backend** (`GoogleIDTokenBackend` in
+`accounts/backends.py`), so the views stay thin and `login()` attributes the
+session unambiguously. Sign-in is Google-only — there are no password accounts,
+so the default `ModelBackend` is dropped.
+
+**Local dev needs no Google round-trip.** When `DEBUG=1`, `DevAutoLoginBackend`
+plus `DevAutoLoginMiddleware` log you straight in as a `root` superuser on the
+first request. Both are gated on `DEBUG` and the dev backend is never added to
+`AUTHENTICATION_BACKENDS` in production, so it cannot authenticate anyone there.
+
 #### Getting `GOOGLE_OAUTH_CLIENT_ID`
 
 The client ID is required; without it the login page shows "not configured". To
