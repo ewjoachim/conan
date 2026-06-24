@@ -75,6 +75,11 @@ production** (nobody can sign in) and, only when `DEBUG=1`, admits any verified
 Google account for local convenience. Users are keyed on Google's stable `sub`,
 never the mutable email.
 
+The token-to-user step is a Django **auth backend** (`GoogleIDTokenBackend` in
+`accounts/backends.py`), so the views stay thin and `login()` attributes the
+session unambiguously. Sign-in is Google-only — there are no password accounts,
+so the default `ModelBackend` is dropped.
+
 #### Getting `GOOGLE_OAUTH_CLIENT_ID`
 
 The client ID is required; without it the login page shows "not configured". To

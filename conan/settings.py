@@ -40,6 +40,10 @@ GOOGLE_ALLOWED_DOMAIN = env("GOOGLE_ALLOWED_DOMAIN")
 # Anonymous users hitting a login-required view are redirected here.
 LOGIN_URL = "login"
 
+# Sign-in is Google-only — there are no password accounts and no Django admin, so
+# the default ModelBackend is dropped entirely.
+AUTHENTICATION_BACKENDS = ["conan.accounts.backends.GoogleIDTokenBackend"]
+
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
