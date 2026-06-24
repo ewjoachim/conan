@@ -6,6 +6,7 @@ on:
   pull_request:
   release:
     types: [published]
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
@@ -14,7 +15,74 @@ env:
 permissions: {}
 
 jobs:
+  # One-click release: bump to the next year.month.N version, cut a GitHub
+  # release with auto-generated notes, then fall through to build-and-push.
+  release:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    outputs:
+      version: ${{ steps.bump.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0 # need the full tag list to compute the next version
+          persist-credentials: false
+
+      - name: Compute next version
+        id: bump
+        shell: python
+        run: |
+          import datetime, os, re, subprocess
+
+          # Calendar versioning: year.month.release-number-within-month.
+          now = datetime.datetime.now(datetime.timezone.utc)
+          prefix = f"{now.year}.{now.month}."
+
+          tags = subprocess.run(
+              ["git", "tag", "--list", f"{prefix}*"],
+              capture_output=True, text=True, check=True,
+          ).stdout.split()
+
+          # Look at *every* tag for this month and take the highest number, so
+          # multiple tags on the same commit (e.g. 2026.6.4 and 2026.6.5) still
+          # bump to the next free number rather than colliding.
+          numbers = [
+              int(m.group(1))
+              for tag in tags
+              if (m := re.fullmatch(rf"{re.escape(prefix)}(\d+)", tag))
+          ]
+          version = f"{prefix}{max(numbers, default=0) + 1}"
+
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"version={version}\n")
+          print(f"Next version: {version}")
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Pass the step output through the environment rather than interpolating
+          # ${{ }} straight into the shell, which would be a script-injection vector.
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          gh release create "$VERSION" \
+            --target "$GITHUB_SHA" \
+            --title "$VERSION" \
+            --generate-notes
+
   build-and-push:
+    needs: [release]
+    # Run after a manual release, and also for push/PR/release events where the
+    # release job is skipped (a skipped dependency must not block this job).
+    if: >-
+      always()
+      && needs.release.result != 'failure'
+      && needs.release.result != 'cancelled'
     runs-on: ubuntu-latest
 
     permissions:
@@ -28,7 +96,7 @@ jobs:
           persist-credentials: false
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name == 'release'
+        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ${{ env.REGISTRY }}
@@ -42,13 +110,14 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
+            type=raw,value=${{ needs.release.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
-          push: ${{ github.event_name == 'release' }}
+          push: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
