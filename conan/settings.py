@@ -46,7 +46,9 @@ WSGI_APPLICATION = "conan.wsgi.application"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.jinja2.Jinja2",
-        "DIRS": [],
+        # Project-level shared templates (e.g. the base layout) live here, so they
+        # don't belong to any single app; per-app templates use APP_DIRS below.
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "environment": "conan.jinja2_env.environment",
