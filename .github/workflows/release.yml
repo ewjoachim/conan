@@ -1,12 +1,13 @@
-name: Build and Push to GHCR
+name: Release
 
-# Prod image path. PRs are handled by pr-preview.yml (which builds the same
-# Dockerfile against Artifact Registry), so this workflow no longer builds on
-# pull_request — that avoids building the image twice for a single PR event.
-
+# Prod image path: build + push the image to GHCR, release-driven only.
+#
+# Not triggered on push:main — a plain main build never pushed anything (push is
+# gated to release/dispatch) and metadata-action's version output there is
+# "latest", which uv-dynamic-versioning rejects as a non-PEP-440 version. PRs are
+# already build-verified by pr-preview.yml (same Dockerfile, against Artifact
+# Registry), so post-merge re-verification on main is redundant.
 on:
-  push:
-    branches: [main]
   release:
     types: [published]
   workflow_dispatch:
@@ -87,7 +88,6 @@ jobs:
       && needs.release.result != 'failure'
       && needs.release.result != 'cancelled'
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
       packages: write
