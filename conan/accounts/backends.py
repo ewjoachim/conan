@@ -1,10 +1,15 @@
 """Authentication backends for CONAN.
 
-:class:`GoogleIDTokenBackend` turns a verified Google ID token into a Django
-user — the "credential → user" half of sign-in lives here, while the HTTP half
-(parsing the POST, status codes) stays in ``accounts.views``. It is the only
-entry in ``settings.AUTHENTICATION_BACKENDS``; sign-in is Google-only, so the
-default ``ModelBackend`` is dropped.
+Two backends, wired up in ``settings.AUTHENTICATION_BACKENDS``:
+
+* :class:`GoogleIDTokenBackend` — the real one. Turns a verified Google ID token
+  into a Django user. The "credential → user" half of sign-in lives here; the
+  HTTP half (parsing the POST, status codes) stays in ``accounts.views``.
+* :class:`DevAutoLoginBackend` — local-dev only. Hands back a ``root`` superuser
+  so you never touch Google while developing. It is added to
+  ``AUTHENTICATION_BACKENDS`` *only* when ``DEBUG`` is true **and** refuses to do
+  anything unless ``DEBUG`` is true, so it can never authenticate anyone in
+  production even if it leaks into the backend list.
 
 Access is gated by a Workspace domain (``GOOGLE_ALLOWED_DOMAIN``): verifying a
 Google token only proves *which* Google account it is, not that the account
@@ -126,4 +131,39 @@ class GoogleIDTokenBackend(BaseBackend):
         return user
 
     def get_user(self, user_id: int) -> AbstractBaseUser | None:
+        return User.objects.filter(pk=user_id).first()
+
+
+class DevAutoLoginBackend(BaseBackend):
+    """Local-dev backend: authenticate as a ``root`` superuser, no Google needed.
+
+    Activated only by :class:`conan.accounts.middleware.DevAutoLoginMiddleware`,
+    which passes ``dev_autologin=True``. Requiring that explicit flag (rather
+    than reacting to an empty credential set) keeps this backend from
+    accidentally authenticating ``root`` when the *Google* callback's
+    ``authenticate`` call falls through with a bad token. Doubly guarded on
+    ``DEBUG`` so it is inert in production.
+    """
+
+    def authenticate(  # ty: ignore[invalid-method-override]
+        self,
+        request: HttpRequest | None,
+        dev_autologin: bool = False,
+        **kwargs: Any,
+    ) -> AbstractBaseUser | None:
+        if not settings.DEBUG or not dev_autologin:
+            return None
+        user, _ = User.objects.get_or_create(
+            username="root",
+            defaults={
+                "email": "root@localhost",
+                "is_staff": True,
+                "is_superuser": True,
+            },
+        )
+        return user
+
+    def get_user(self, user_id: int) -> AbstractBaseUser | None:
+        if not settings.DEBUG:
+            return None
         return User.objects.filter(pk=user_id).first()

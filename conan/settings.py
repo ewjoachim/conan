@@ -41,8 +41,12 @@ GOOGLE_ALLOWED_DOMAIN = env("GOOGLE_ALLOWED_DOMAIN")
 LOGIN_URL = "login"
 
 # Sign-in is Google-only — there are no password accounts and no Django admin, so
-# the default ModelBackend is dropped entirely.
+# the default ModelBackend is dropped entirely. In DEBUG we prepend a dev backend
+# that logs you in as a `root` superuser (driven by DevAutoLoginMiddleware below),
+# so local work never has to round-trip through Google.
 AUTHENTICATION_BACKENDS = ["conan.accounts.backends.GoogleIDTokenBackend"]
+if DEBUG:
+    AUTHENTICATION_BACKENDS.insert(0, "conan.accounts.backends.DevAutoLoginBackend")
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -66,6 +70,15 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.LoginRequiredMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+# DEBUG only: auto-login as `root`. Must sit *after* AuthenticationMiddleware
+# (request.user must exist) and *before* LoginRequiredMiddleware (the session
+# must be authenticated before the login gate runs).
+if DEBUG:
+    MIDDLEWARE.insert(
+        MIDDLEWARE.index("django.contrib.auth.middleware.LoginRequiredMiddleware"),
+        "conan.accounts.middleware.DevAutoLoginMiddleware",
+    )
 
 ROOT_URLCONF = "conan.urls"
 WSGI_APPLICATION = "conan.wsgi.application"
