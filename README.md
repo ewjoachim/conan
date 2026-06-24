@@ -53,7 +53,7 @@ Settings are read from the environment (via `django-environ`):
 | `ALLOWED_HOSTS` | `localhost,127.0.0.1` | comma-separated |
 | `CSRF_TRUSTED_ORIGINS` | empty | comma-separated, e.g. `https://conan.negitachi.fr` |
 | `GOOGLE_OAUTH_CLIENT_ID` | empty | OAuth **client ID** for Sign in with Google (no secret — see below) |
-| `GOOGLE_ALLOWED_DOMAIN` | `negitachi.fr` | only verified addresses on this domain may sign in |
+| `GOOGLE_ALLOWED` | `@negitachi.fr` | comma-separated; `@domain.tld` admits the whole domain, `user@example.com` admits one address |
 | `DATABASE_PATH` | `./data/conan.db` (dev) | set to `/data/conan.db` in the container |
 | `TZ` | `Europe/Paris` | |
 
@@ -68,12 +68,12 @@ so there is **no OAuth client secret** to store anywhere — only the public
 `GOOGLE_OAUTH_CLIENT_ID`.
 
 Verifying a token only proves *which* Google account it is, not that the account
-belongs here, so access is restricted to one Workspace domain via
-`GOOGLE_ALLOWED_DOMAIN` (default `negitachi.fr`): only a Google-*verified* address
-on that domain may sign in. With the domain unset the app **fails closed in
-production** (nobody can sign in) and, only when `DEBUG=1`, admits any verified
-Google account for local convenience. Users are keyed on Google's stable `sub`,
-never the mutable email.
+belongs here, so access is restricted via `GOOGLE_ALLOWED` (default `@negitachi.fr`):
+a comma-separated list where each entry is either `@domain.tld` (the whole domain)
+or `user@example.com` (one address). Only a Google-*verified* address matching an
+entry may sign in. With an empty list the app **fails closed in production** (nobody
+can sign in) and, only when `DEBUG=1`, admits any verified Google account for local
+convenience. Users are keyed on Google's stable `sub`, never the mutable email.
 
 The token-to-user step is a Django **auth backend** (`GoogleIDTokenBackend` in
 `accounts/backends.py`), so the views stay thin and `login()` attributes the
