@@ -12,5 +12,8 @@ urlpatterns = [
     path("concert/<int:pk>/field/", views.set_field, name="field"),
     path("concert/<int:pk>/cotech-mode/", views.set_cotech_mode, name="cotech_mode"),
     path("concert/<int:pk>/meta/", views.update_meta, name="meta"),
+    path("concert/<int:pk>/archive/", views.concert_archive, name="archive"),
+    path("concert/<int:pk>/unarchive/", views.concert_unarchive, name="unarchive"),
     path("concert/<int:pk>/delete/", views.concert_delete, name="delete"),
+    path("archives/", views.concert_archives, name="archives"),
 ]

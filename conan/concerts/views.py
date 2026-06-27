@@ -44,9 +44,19 @@ def healthz(request: HttpRequest) -> HttpResponse:
 
 
 def concert_list(request: HttpRequest) -> HttpResponse:
-    concerts = Concert.objects.all()
+    concerts = Concert.objects.filter(archived=False)
     html = render_to_string(
         "concerts/list.html.jinja",
+        {"concerts": concerts, "count": concerts.count()},
+        request,
+    )
+    return HttpResponse(html)
+
+
+def concert_archives(request: HttpRequest) -> HttpResponse:
+    concerts = Concert.objects.filter(archived=True)
+    html = render_to_string(
+        "concerts/archives.html.jinja",
         {"concerts": concerts, "count": concerts.count()},
         request,
     )
@@ -190,6 +200,24 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
         )
         return HttpResponse(html)
     return HttpResponse(status=204)
+
+
+@require_POST
+@login_required
+def concert_archive(request: HttpRequest, pk: int) -> HttpResponse:
+    concert = get_object_or_404(Concert, pk=pk)
+    concert.archived = True
+    concert.save(update_fields=["archived", "updated_at"])
+    return redirect("list")
+
+
+@require_POST
+@login_required
+def concert_unarchive(request: HttpRequest, pk: int) -> HttpResponse:
+    concert = get_object_or_404(Concert, pk=pk)
+    concert.archived = False
+    concert.save(update_fields=["archived", "updated_at"])
+    return redirect("archives")
 
 
 @require_POST

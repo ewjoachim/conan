@@ -18,7 +18,10 @@
 <div class="main">
   <div class="top-bar">
     <span class="section-title">{{ count }} concert{{ 's' if count > 1 else '' }}</span>
-    <button class="btn-new" onclick="document.getElementById('modal').classList.add('open')">+ Nouveau concert</button>
+    <div class="top-bar-actions">
+      <a class="btn-archives" href="{{ url('archives') }}">Archives</a>
+      <button class="btn-new" onclick="document.getElementById('modal').classList.add('open')">+ Nouveau concert</button>
+    </div>
   </div>
   <div class="concert-list">
     {% if not concerts %}
@@ -40,13 +43,19 @@
           <div class="prog-bar-fill" style="width:{{ c.progress }}%"></div>
         </div>
       </div>
-      <form method="POST" action="{{ url('delete', args=[c.pk]) }}" onclick="event.stopPropagation()">
-        {{ csrf_input }}
-        <button type="submit" class="btn-delete"
-          onclick="return confirm('Supprimer « {{ c.name or 'ce concert' }} » ? Cette action est irréversible.')">
-          Supprimer
-        </button>
-      </form>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <form method="POST" action="{{ url('archive', args=[c.pk]) }}">
+          {{ csrf_input }}
+          <button type="submit" class="btn-archive">Archiver</button>
+        </form>
+        <form method="POST" action="{{ url('delete', args=[c.pk]) }}">
+          {{ csrf_input }}
+          <button type="submit" class="btn-delete"
+            onclick="return confirm('Supprimer « {{ c.name or 'ce concert' }} » ? Cette action est irréversible.')">
+            Supprimer
+          </button>
+        </form>
+      </div>
     </a>
     {% endfor %}
     {% endif %}
