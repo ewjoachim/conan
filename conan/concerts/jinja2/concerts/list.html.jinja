@@ -40,6 +40,13 @@
           <div class="prog-bar-fill" style="width:{{ c.progress }}%"></div>
         </div>
       </div>
+      <form method="POST" action="{{ url('delete', args=[c.pk]) }}" onclick="event.stopPropagation()">
+        {{ csrf_input }}
+        <button type="submit" class="btn-delete"
+          onclick="return confirm('Supprimer « {{ c.name or 'ce concert' }} » ? Cette action est irréversible.')">
+          Supprimer
+        </button>
+      </form>
     </a>
     {% endfor %}
     {% endif %}

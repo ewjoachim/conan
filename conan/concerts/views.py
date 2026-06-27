@@ -189,3 +189,11 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
         )
         return HttpResponse(html)
     return HttpResponse(status=204)
+
+
+@require_POST
+@login_required
+def concert_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    concert = get_object_or_404(Concert, pk=pk)
+    concert.delete()
+    return redirect("list")
