@@ -176,6 +176,7 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
     value: Any = request.POST.get("value", "").strip()
     if field == "date":
         from datetime import date as date_type
+
         value = date_type.fromisoformat(value) if value else None
     setattr(concert, field, value)
     concert.save(update_fields=[field, "updated_at"])
