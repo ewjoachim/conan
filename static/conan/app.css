@@ -143,6 +143,19 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .sub-label{font-size:.83rem;cursor:pointer;flex:1;font-weight:600;}
 .sub-label.done{text-decoration:line-through;color:var(--muted);font-weight:400;}
 
+/* Card action buttons (archive / delete) */
+.card-actions{display:flex;gap:.4rem;flex-shrink:0;opacity:0;transition:opacity .15s;}
+.concert-card:hover .card-actions{opacity:1;}
+.btn-archive,.btn-delete{font-family:'Josefin Sans',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.3rem .6rem;border-radius:5px;cursor:pointer;border:1.5px solid;transition:background .15s,color .15s,border-color .15s;white-space:nowrap;line-height:1;}
+.btn-archive{background:transparent;color:var(--muted);border-color:var(--border);}
+.btn-archive:hover{background:var(--green-light);color:var(--green-dark);border-color:var(--green);}
+.btn-delete{background:transparent;color:#b3261e;border-color:#e8c4c2;}
+.btn-delete:hover{background:#fdf0ef;border-color:#b3261e;}
+.btn-archives{font-family:'Josefin Sans',sans-serif;font-size:.75rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:.4rem .85rem;border:1.5px solid var(--border);border-radius:6px;color:var(--muted);text-decoration:none;transition:border-color .15s,color .15s;}
+.btn-archives:hover{border-color:var(--green);color:var(--green);}
+.top-bar-actions{display:flex;align-items:center;gap:.6rem;}
+.concert-card.archived{opacity:.75;}
+
 /* Footer — full-width green bar matching the header */
 .version-footer{background:var(--green);color:rgba(255,255,255,.65);text-align:center;padding:.85rem 1rem;font-size:.7rem;font-family:'Josefin Sans',sans-serif;letter-spacing:.06em;}
 
