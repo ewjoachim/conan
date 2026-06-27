@@ -57,8 +57,29 @@ COTECH_OPTIONS: tuple[tuple[str, str], ...] = (
 
 STEPS: tuple[Step, ...] = (
     Step(
-        id="s1",
+        id="s0",
         num="Étape 1",
+        title="Vérification mandataire",
+        items=(
+            Item(
+                id="s0_1",
+                label="Rémunéré ?",
+                type="yesno",
+                subs=(
+                    Sub(id="s0_1a", label="Demande de devis au trésorier"),
+                    Sub(id="s0_1b", label="Envoi du devis"),
+                    Sub(id="s0_1c", label="Réception du devis signé"),
+                    Sub(id="s0_1d", label="Transfert au trésorier"),
+                ),
+            ),
+            Item(id="s0_2", label="Lieu d'échauffement ?", type="yesno"),
+            Item(id="s0_3", label="Catering ?", type="yesno"),
+            Item(id="s0_4", label="Communication de son côté ?", type="yesno"),
+        ),
+    ),
+    Step(
+        id="s1",
+        num="Étape 2",
         title="Sondage préalable",
         items=(
             Item(
@@ -94,7 +115,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s2",
-        num="Étape 2",
+        num="Étape 3",
         title="Moodle",
         parallel=True,
         items=(
@@ -125,7 +146,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s2b",
-        num="Étape 2'",
+        num="Étape 3'",
         title="Orga interne",
         parallel=True,
         items=(
@@ -164,7 +185,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s3",
-        num="Étape 3",
+        num="Étape 4",
         title="Suivi de la préparation",
         items=(
             Item(
@@ -192,7 +213,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s4",
-        num="Étape 4",
+        num="Étape 5",
         title="Communication interne",
         items=(
             Item(
