@@ -52,9 +52,15 @@ def concert_list(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def concert_create(request: HttpRequest) -> HttpResponse:
+    from datetime import date as parse_date
+    raw_date = request.POST.get("date", "").strip()
+    try:
+        parsed_date = parse_date.fromisoformat(raw_date) if raw_date else None
+    except ValueError:
+        parsed_date = None
     concert = Concert.objects.create(
         name=request.POST.get("name", "").strip(),
-        date=request.POST.get("date", "").strip(),
+        date=parsed_date,
         respo=request.POST.get("respo", "").strip(),
     )
     return redirect("detail", pk=concert.pk)
