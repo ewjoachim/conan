@@ -29,9 +29,9 @@
     </div>
     <div class="meta-field">
       <span class="meta-label">Date</span>
-      <input class="meta-input" type="text" value="{{ concert.date }}" placeholder="—" name="value"
+      <input class="meta-input" type="date" value="{{ concert.date.isoformat() if concert.date else '' }}" name="value"
         hx-post="{{ url('meta', args=[concert.pk]) }}" hx-vals='{"field": "date"}'
-        hx-trigger="input changed delay:800ms" hx-swap="none">
+        hx-trigger="change" hx-swap="none">
     </div>
     <div class="meta-field">
       <span class="meta-label">Respo Negi</span>

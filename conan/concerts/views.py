@@ -12,6 +12,8 @@ silent (HTTP 204) so the user's textarea keeps focus while typing.
 
 # login_not_required exists since Django 5.1 (our floor is 5.2); the django-types
 # stubs lag behind, so silence ty's import error here.
+from typing import Any
+
 from django.contrib.auth.decorators import (
     login_not_required,  # ty: ignore[unresolved-import]
 )
@@ -171,7 +173,11 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
         return HttpResponseBadRequest("unknown field")
 
     concert = get_object_or_404(Concert, pk=pk)
-    setattr(concert, field, request.POST.get("value", "").strip())
+    value: Any = request.POST.get("value", "").strip()
+    if field == "date":
+        from datetime import date as date_type
+        value = date_type.fromisoformat(value) if value else None
+    setattr(concert, field, value)
     concert.save(update_fields=[field, "updated_at"])
 
     if field == "name":
