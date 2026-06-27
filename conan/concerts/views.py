@@ -53,6 +53,7 @@ def concert_list(request: HttpRequest) -> HttpResponse:
 @require_POST
 def concert_create(request: HttpRequest) -> HttpResponse:
     from datetime import date as parse_date
+
     raw_date = request.POST.get("date", "").strip()
     try:
         parsed_date = parse_date.fromisoformat(raw_date) if raw_date else None
