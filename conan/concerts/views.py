@@ -16,6 +16,7 @@ from typing import Any
 
 from django.contrib.auth.decorators import (
     login_not_required,  # ty: ignore[unresolved-import]
+    login_required,
 )
 from django.db import connection, transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
