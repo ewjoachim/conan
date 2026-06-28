@@ -63,17 +63,6 @@ STEPS: tuple[Step, ...] = (
         title="Vérification mandataire",
         items=(
             Item(
-                id="s0_2",
-                label="Espace d'échauffement",
-                hint="Le mandataire a bien confirmé qu'on aurait un lieu pour nous échauffer et laisser nos affaires.",
-            ),
-            Item(
-                id="s0_3",
-                label="Catering ?",
-                type="yesno",
-                show_pertinent=False,
-            ),
-            Item(
                 id="s0_1",
                 label="Rémunéré ?",
                 type="yesno",
@@ -85,6 +74,28 @@ STEPS: tuple[Step, ...] = (
                     Sub(id="s0_1e", label="Facture demandée au trésorier"),
                     Sub(id="s0_1f", label="Facture transmise (sauf si Chorus Pro)"),
                 ),
+            ),
+            Item(
+                id="s0_5",
+                label="Concert Negi ?",
+                type="yesno",
+                show_pertinent=False,
+                subs=(
+                    Sub(id="s0_5a", label="Se répartir les démarches avec le Bureau"),
+                    Sub(id="s0_5b", label="Confirmer la réservation de salle"),
+                    Sub(id="s0_5c", label="Vérifier les accès et la logistique sur place"),
+                ),
+            ),
+            Item(
+                id="s0_2",
+                label="Espace d'échauffement",
+                hint="Le mandataire a bien confirmé qu'on aurait un lieu pour nous échauffer et laisser nos affaires.",
+            ),
+            Item(
+                id="s0_3",
+                label="Catering ?",
+                type="yesno",
+                show_pertinent=False,
             ),
         ),
     ),
@@ -169,19 +180,6 @@ STEPS: tuple[Step, ...] = (
                 placeholder="Pack presse, description, logos…",
             ),
             Item(id="s2b_4", label="CoTech au courant", type="cotech"),
-            Item(
-                id="s2b_3",
-                label="Trouver une salle ?",
-                type="yesno",
-                subs=(
-                    Sub(id="s2b_3a", label="Se répartir les démarches avec le Bureau"),
-                    Sub(id="s2b_3b", label="Confirmer la réservation de salle"),
-                    Sub(
-                        id="s2b_3c",
-                        label="Vérifier les accès et la logistique sur place",
-                    ),
-                ),
-            ),
             Item(
                 id="s2b_5",
                 label="Organisation des transports ?",
