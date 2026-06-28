@@ -37,6 +37,7 @@ class Item:
     hint: str = ""  # may contain trusted HTML (rendered with |safe)
     placeholder: str = ""
     subs: tuple[Sub, ...] = ()
+    show_pertinent: bool = True  # whether to show "Pertinent ?" label on yesno items
 
 
 @dataclass(frozen=True)
@@ -62,6 +63,17 @@ STEPS: tuple[Step, ...] = (
         title="Vérification mandataire",
         items=(
             Item(
+                id="s0_2",
+                label="Espace d'échauffement",
+                hint="Le mandataire a bien confirmé qu'on aurait un lieu pour nous échauffer et laisser nos affaires.",
+            ),
+            Item(
+                id="s0_3",
+                label="Catering ?",
+                type="yesno",
+                show_pertinent=False,
+            ),
+            Item(
                 id="s0_1",
                 label="Rémunéré ?",
                 type="yesno",
@@ -72,9 +84,6 @@ STEPS: tuple[Step, ...] = (
                     Sub(id="s0_1d", label="Transfert au trésorier"),
                 ),
             ),
-            Item(id="s0_2", label="Lieu d'échauffement ?", type="yesno"),
-            Item(id="s0_3", label="Catering ?", type="yesno"),
-            Item(id="s0_4", label="Communication de son côté ?", type="yesno"),
         ),
     ),
     Step(

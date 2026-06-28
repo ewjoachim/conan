@@ -61,7 +61,7 @@
   <div class="yesno-item">
     <div class="yesno-row">
       <span class="yesno-label">{{ item.label }}</span>
-      <span class="yesno-question">Pertinent ?</span>
+      {% if item.show_pertinent %}<span class="yesno-question">Pertinent ?</span>{% endif %}
       <div class="yesno-btns">
         <button class="yn-btn {% if yn == 'y' %}active-yes{% endif %}"
           hx-post="{{ url('yesno', args=[concert.pk]) }}"
