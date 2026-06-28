@@ -83,7 +83,10 @@ STEPS: tuple[Step, ...] = (
                 subs=(
                     Sub(id="s0_5a", label="Se répartir les démarches avec le Bureau"),
                     Sub(id="s0_5b", label="Confirmer la réservation de salle"),
-                    Sub(id="s0_5c", label="Vérifier les accès et la logistique sur place"),
+                    Sub(
+                        id="s0_5c",
+                        label="Vérifier les accès et la logistique sur place",
+                    ),
                 ),
             ),
             Item(
