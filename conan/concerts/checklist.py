@@ -301,8 +301,8 @@ def _item_progress(item: Item, state: State) -> tuple[int, int]:
         total, done = 1, (1 if yn else 0)
         if yn == "y":
             total += 2
-            done += (1 if state.get(f"{item.id}_sondage_fait") else 0)
-            done += (1 if state.get(f"{item.id}_sondage_depile") else 0)
+            done += 1 if state.get(f"{item.id}_sondage_fait") else 0
+            done += 1 if state.get(f"{item.id}_sondage_depile") else 0
         return total, done
     return 1, (1 if item_done(item, state) else 0)
 
