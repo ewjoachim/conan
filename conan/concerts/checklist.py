@@ -33,11 +33,10 @@ class Sub:
 class Item:
     id: str
     label: str
-    type: str = "simple"  # one of: simple | yesno | textfield | cotech
+    type: str = "simple"  # one of: simple | yesno | textfield | cotech | repets
     hint: str = ""  # may contain trusted HTML (rendered with |safe)
     placeholder: str = ""
     subs: tuple[Sub, ...] = ()
-    show_pertinent: bool = True  # whether to show "Pertinent ?" label on yesno items
 
 
 @dataclass(frozen=True)
@@ -79,7 +78,6 @@ STEPS: tuple[Step, ...] = (
                 id="s0_5",
                 label="Concert Negi ?",
                 type="yesno",
-                show_pertinent=False,
                 subs=(
                     Sub(id="s0_5a", label="Se répartir les démarches avec le Bureau"),
                     Sub(id="s0_5b", label="Confirmer la réservation de salle"),
@@ -98,7 +96,6 @@ STEPS: tuple[Step, ...] = (
                 id="s0_3",
                 label="Catering ?",
                 type="yesno",
-                show_pertinent=False,
             ),
         ),
     ),
@@ -221,6 +218,11 @@ STEPS: tuple[Step, ...] = (
                     ),
                 ),
             ),
+            Item(
+                id="s3_repets",
+                label="Répétition(s) supplémentaire(s) ?",
+                type="repets",
+            ),
         ),
     ),
     Step(
@@ -256,13 +258,17 @@ def item_done(item: Item, state: State) -> bool:
         return is_cotech_done(state)
     if item.type == "textfield":
         return bool(state.get(f"tf_{item.id}"))
-    if item.type == "yesno":
+    if item.type in {"yesno", "repets"}:
         yn = state.get(f"yn_{item.id}")
         if not yn:
             return False
-        if yn == "y":
-            return all(state.get(sub.id) for sub in item.subs)
-        return True
+        if yn == "n":
+            return True
+        if item.type == "repets":
+            return bool(state.get(f"{item.id}_sondage_fait")) and bool(
+                state.get(f"{item.id}_sondage_depile")
+            )
+        return all(state.get(sub.id) for sub in item.subs)
     return bool(state.get(item.id))
 
 
@@ -281,6 +287,7 @@ def _item_progress(item: Item, state: State) -> tuple[int, int]:
     """Return ``(total, done)`` checkable units contributed by one item.
 
     A yes/no item counts as one unit, plus one per sub-item once answered "yes".
+    A repets item counts as one unit plus two (sondage fait/dépilé) once answered "yes".
     """
     if item.type == "yesno":
         yn = state.get(f"yn_{item.id}")
@@ -288,6 +295,14 @@ def _item_progress(item: Item, state: State) -> tuple[int, int]:
         if yn == "y":
             total += len(item.subs)
             done += sum(1 for sub in item.subs if state.get(sub.id))
+        return total, done
+    if item.type == "repets":
+        yn = state.get(f"yn_{item.id}")
+        total, done = 1, (1 if yn else 0)
+        if yn == "y":
+            total += 2
+            done += (1 if state.get(f"{item.id}_sondage_fait") else 0)
+            done += (1 if state.get(f"{item.id}_sondage_depile") else 0)
         return total, done
     return 1, (1 if item_done(item, state) else 0)
 
@@ -318,6 +333,9 @@ def _toggle_keys() -> frozenset[str]:
                 keys.add(item.id)
             elif item.type == "textfield":
                 keys.add(f"tf_{item.id}")
+            elif item.type == "repets":
+                keys.add(f"{item.id}_sondage_fait")
+                keys.add(f"{item.id}_sondage_depile")
             for sub in item.subs:
                 keys.add(sub.id)
     return frozenset(keys)
@@ -327,7 +345,7 @@ def _toggle_keys() -> frozenset[str]:
 TOGGLE_KEYS: frozenset[str] = _toggle_keys()
 # Item ids that accept a yes/no answer.
 YESNO_IDS: frozenset[str] = frozenset(
-    item.id for item in ITEMS_BY_ID.values() if item.type == "yesno"
+    item.id for item in ITEMS_BY_ID.values() if item.type in {"yesno", "repets"}
 )
 # Free-text keys a "field" request may set.
 TEXT_KEYS: frozenset[str] = frozenset(

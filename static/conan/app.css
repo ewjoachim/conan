@@ -146,6 +146,18 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .sub-label{font-size:.83rem;cursor:pointer;flex:1;font-weight:600;}
 .sub-label.done{text-decoration:line-through;color:var(--muted);font-weight:400;}
 
+/* Répétitions dynamiques */
+.repet-row{display:flex;align-items:center;gap:.5rem;padding:.5rem 1rem;border-bottom:1px solid var(--green-pale);}
+.repet-num{font-family:'Josefin Sans',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--green);white-space:nowrap;min-width:52px;}
+.repet-date{font-family:'Nunito',sans-serif;font-size:.82rem;border:1.5px solid var(--border);border-radius:5px;padding:.25rem .4rem;color:var(--ink);outline:none;transition:border-color .2s;width:130px;flex-shrink:0;}
+.repet-date:focus{border-color:var(--green);}
+.repet-lieu{font-family:'Nunito',sans-serif;font-size:.82rem;border:1.5px solid var(--border);border-radius:5px;padding:.25rem .5rem;color:var(--ink);outline:none;transition:border-color .2s;flex:1;min-width:0;}
+.repet-lieu:focus{border-color:var(--green);}
+.repet-del{font-size:.75rem;color:var(--muted);background:transparent;border:none;cursor:pointer;padding:.2rem .35rem;border-radius:4px;line-height:1;transition:color .15s,background .15s;flex-shrink:0;}
+.repet-del:hover{color:#b3261e;background:#fdf0ef;}
+.repet-add{font-family:'Josefin Sans',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.45rem 1rem;margin:.5rem 1rem;background:transparent;border:1.5px dashed var(--border);border-radius:5px;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s;display:block;}
+.repet-add:hover{border-color:var(--green);color:var(--green);}
+
 /* Card action buttons (archive / delete) */
 .card-actions{display:flex;gap:.4rem;flex-shrink:0;opacity:0;transition:opacity .15s;}
 .concert-card:hover .card-actions{opacity:1;}

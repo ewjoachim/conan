@@ -202,6 +202,57 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
     return HttpResponse(status=204)
 
 
+def _render_step(request: HttpRequest, concert: Concert, step_id: str) -> HttpResponse:
+    step = checklist.STEPS_BY_ID[step_id]
+    return HttpResponse(_render_step_and_progress(request, concert, step))
+
+
+@require_POST
+def repet_add(request: HttpRequest, pk: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        repets: list[dict[str, str | None]] = list(concert.state.get("repets", []))
+        repets.append({"date": None, "lieu": ""})
+        concert.state["repets"] = repets
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+@require_POST
+def repet_delete(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        repets = list(concert.state.get("repets", []))
+        if 0 <= idx < len(repets):
+            repets.pop(idx)
+        concert.state["repets"] = repets
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+@require_POST
+def repet_update(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        repets = list(concert.state.get("repets", []))
+        if 0 <= idx < len(repets):
+            repet = dict(repets[idx])
+            if "date" in request.POST:
+                repet["date"] = request.POST["date"].strip() or None
+            if "lieu" in request.POST:
+                repet["lieu"] = request.POST["lieu"].strip()
+            repets[idx] = repet
+        concert.state["repets"] = repets
+        concert.save(update_fields=["state", "updated_at"])
+    return HttpResponse(status=204)
+
+
 @require_POST
 @login_required
 def concert_archive(request: HttpRequest, pk: int) -> HttpResponse:
