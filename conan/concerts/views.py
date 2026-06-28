@@ -76,6 +76,7 @@ def concert_create(request: HttpRequest) -> HttpResponse:
         name=request.POST.get("name", "").strip(),
         date=parsed_date,
         respo=request.POST.get("respo", "").strip(),
+        concert_negi=bool(request.POST.get("concert_negi")),
     )
     return redirect("detail", pk=concert.pk)
 

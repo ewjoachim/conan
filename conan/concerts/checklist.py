@@ -75,19 +75,6 @@ STEPS: tuple[Step, ...] = (
                 ),
             ),
             Item(
-                id="s0_5",
-                label="Concert Negi ?",
-                type="yesno",
-                subs=(
-                    Sub(id="s0_5a", label="Se répartir les démarches avec le Bureau"),
-                    Sub(id="s0_5b", label="Confirmer la réservation de salle"),
-                    Sub(
-                        id="s0_5c",
-                        label="Vérifier les accès et la logistique sur place",
-                    ),
-                ),
-            ),
-            Item(
                 id="s0_2",
                 label="Espace d'échauffement",
                 hint="Le mandataire a bien confirmé qu'on aurait un lieu pour nous échauffer et laisser nos affaires.",
