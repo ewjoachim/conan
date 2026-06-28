@@ -48,14 +48,8 @@
   </div>
 </div>
 
-{% if concert.concert_negi %}
-<div class="wip-banner">
-  <p>🚧 Checklist Concert Negi — page en construction</p>
-</div>
-{% else %}
 <p class="steps-intro">L'ordre des actions peut varier, <em>« on s'adapte ! »</em></p>
 <div class="steps">
   {% for step in steps %}{% include "concerts/partials/step.html.jinja" %}{% endfor %}
 </div>
-{% endif %}
 {% endblock %}

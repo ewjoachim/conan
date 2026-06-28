@@ -15,7 +15,6 @@ class Concert(models.Model):
     mandataire = models.TextField(default="", blank=True)
     state = models.JSONField(default=dict, blank=True)
     archived = models.BooleanField(default=False)
-    concert_negi = models.BooleanField(default=False)
     progress = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
