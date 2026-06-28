@@ -52,8 +52,8 @@ class Step:
 # Options for the special "CoTech au courant" item.
 COTECH_OPTIONS: tuple[tuple[str, str], ...] = (
     ("np", "Pas pertinent"),
-    ("direct", "Contact direct CoTech"),
-    ("passage", "Passage d'information"),
+    ("direct", "CoTech mis en contact direct"),
+    ("passage", "ConAn transmet les demandes"),
 )
 
 STEPS: tuple[Step, ...] = (
@@ -133,7 +133,7 @@ STEPS: tuple[Step, ...] = (
             Item(
                 id="s2_1",
                 label="Création du cours Moodle",
-                hint="Demander à Eve ou au bureau.",
+                hint="Demander à Eve ou au Bureau.",
             ),
             Item(
                 id="s2_2",
@@ -164,7 +164,7 @@ STEPS: tuple[Step, ...] = (
             Item(id="s2b_1", label="ComCom au courant"),
             Item(
                 id="s2b_2",
-                label="Éléments à transmettre à ComCom (#ComcomConan)",
+                label="Informations à transmettre à ComCom (#ComcomConan)",
                 type="textfield",
                 placeholder="Pack presse, description, logos…",
             ),
