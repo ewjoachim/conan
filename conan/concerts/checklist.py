@@ -82,6 +82,8 @@ STEPS: tuple[Step, ...] = (
                     Sub(id="s0_1b", label="Envoi du devis"),
                     Sub(id="s0_1c", label="Réception du devis signé"),
                     Sub(id="s0_1d", label="Transfert au trésorier"),
+                    Sub(id="s0_1e", label="Facture demandée au trésorier"),
+                    Sub(id="s0_1f", label="Facture transmise (sauf si Chorus Pro)"),
                 ),
             ),
         ),
