@@ -79,8 +79,9 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .meta-textarea:focus{border-color:var(--green);}
 .meta-textarea::placeholder{color:var(--border);}
 
-/* Steps intro */
+/* Steps intro / outro */
 .steps-intro{max-width:680px;margin:1rem auto 0;padding:0 1rem;font-size:.8rem;color:var(--muted);font-style:italic;}
+.steps-outro{max-width:680px;margin:1rem auto 2rem;padding:0 1rem;font-size:.8rem;color:var(--muted);font-style:italic;}
 
 /* Steps */
 .steps{max-width:680px;margin:1.25rem auto 0;padding:0 1rem;display:flex;flex-direction:column;gap:.875rem;}

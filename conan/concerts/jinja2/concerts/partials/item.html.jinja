@@ -111,6 +111,10 @@
         <div class="sub-check {% if state.get(item.id + '_sondage_depile') %}checked{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_sondage_depile', step.id) | safe }}></div>
         <span class="sub-label {% if state.get(item.id + '_sondage_depile') %}done{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_sondage_depile', step.id) | safe }}>Sondage dépilé</span>
       </div>
+      <div class="sub-item">
+        <div class="sub-check {% if state.get(item.id + '_info_transmises') %}checked{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_info_transmises', step.id) | safe }}></div>
+        <span class="sub-label {% if state.get(item.id + '_info_transmises') %}done{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_info_transmises', step.id) | safe }}>Informations transmises à Membres</span>
+      </div>
       {% set repets = state.get('repets', []) %}
       {% for repet in repets %}
       <div class="repet-row">
