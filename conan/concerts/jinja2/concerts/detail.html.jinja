@@ -48,7 +48,13 @@
   </div>
 </div>
 
-<p class="steps-intro">L'ordre des actions peut varier, <em>« on s'adapte ! »</em></p>
+<div class="steps-toolbar">
+  <p class="steps-intro">L'ordre des actions peut varier, <em>« on s'adapte ! »</em></p>
+  <div class="fold-btns">
+    <button class="btn-fold" onclick="document.querySelectorAll('.step').forEach(s=>s.classList.add('open'))">Tout déplier</button>
+    <button class="btn-fold" onclick="document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'))">Tout replier</button>
+  </div>
+</div>
 <div class="steps">
   {% for step in steps %}{% include "concerts/partials/step.html.jinja" %}{% endfor %}
 </div>
