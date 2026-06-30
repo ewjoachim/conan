@@ -255,7 +255,7 @@ def extra_toggle(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
         extras = list(concert.state.get("extras", []))
         if 0 <= idx < len(extras):
             extra = dict(extras[idx])
-            extra["done"] = not extra.get("done", False)
+            extra["done"] = not extra.get("done")
             extras[idx] = extra
         concert.state["extras"] = extras
         concert.save(update_fields=["state", "updated_at"])

@@ -233,9 +233,7 @@ STEPS: tuple[Step, ...] = (
         id="s5",
         num="Étape 6",
         title="Autre chose ?",
-        items=(
-            Item(id="s5_extras", type="extras", label=""),
-        ),
+        items=(Item(id="s5_extras", type="extras", label=""),),
     ),
 )
 
