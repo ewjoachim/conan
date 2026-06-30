@@ -229,6 +229,14 @@ STEPS: tuple[Step, ...] = (
             ),
         ),
     ),
+    Step(
+        id="s5",
+        num="Étape 6",
+        title="Autre chose ?",
+        items=(
+            Item(id="s5_extras", type="extras", label=""),
+        ),
+    ),
 )
 
 
@@ -243,6 +251,8 @@ def is_cotech_done(state: State) -> bool:
 
 
 def item_done(item: Item, state: State) -> bool:
+    if item.type == "extras":
+        return True  # extras are optional, never block step completion
     if item.type == "cotech":
         return is_cotech_done(state)
     if item.type == "textfield":
@@ -277,7 +287,10 @@ def _item_progress(item: Item, state: State) -> tuple[int, int]:
 
     A yes/no item counts as one unit, plus one per sub-item once answered "yes".
     A repets item counts as one unit plus two (sondage fait/dépilé) once answered "yes".
+    Extras are optional and don't count toward progress.
     """
+    if item.type == "extras":
+        return 0, 0
     if item.type == "yesno":
         yn = state.get(f"yn_{item.id}")
         total, done = 1, (1 if yn else 0)

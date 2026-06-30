@@ -202,6 +202,66 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
     return HttpResponse(status=204)
 
 
+@require_POST
+def extra_add(request: HttpRequest, pk: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        extras: list[dict[str, object]] = list(concert.state.get("extras", []))
+        extras.append({"desc": "", "done": False})
+        concert.state["extras"] = extras
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+@require_POST
+def extra_delete(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        extras = list(concert.state.get("extras", []))
+        if 0 <= idx < len(extras):
+            extras.pop(idx)
+        concert.state["extras"] = extras
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+@require_POST
+def extra_update(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        extras = list(concert.state.get("extras", []))
+        if 0 <= idx < len(extras):
+            extra = dict(extras[idx])
+            extra["desc"] = request.POST.get("desc", "").strip()
+            extras[idx] = extra
+        concert.state["extras"] = extras
+        concert.save(update_fields=["state", "updated_at"])
+    return HttpResponse(status=204)
+
+
+@require_POST
+def extra_toggle(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        extras = list(concert.state.get("extras", []))
+        if 0 <= idx < len(extras):
+            extra = dict(extras[idx])
+            extra["done"] = not extra.get("done", False)
+            extras[idx] = extra
+        concert.state["extras"] = extras
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
 def _render_step(request: HttpRequest, concert: Concert, step_id: str) -> HttpResponse:
     step = checklist.STEPS_BY_ID[step_id]
     return HttpResponse(_render_step_and_progress(request, concert, step))

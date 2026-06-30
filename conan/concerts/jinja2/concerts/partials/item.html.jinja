@@ -138,6 +138,31 @@
     </div>
   {% endif %}
 
+{% elif item.type == 'extras' %}
+  {% set extras = state.get('extras', []) %}
+  <div class="extras-list">
+    {% for extra in extras %}
+    <div class="extra-row">
+      <div class="extra-check {% if extra.done %}checked{% endif %}"
+        hx-post="{{ url('extra_toggle', args=[concert.pk, loop.index0]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML"></div>
+      <input class="extra-desc {% if extra.done %}done{% endif %}" type="text"
+        placeholder="Description…" value="{{ extra.desc or '' }}" name="desc"
+        hx-post="{{ url('extra_update', args=[concert.pk, loop.index0]) }}"
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+      <button class="repet-del"
+        hx-post="{{ url('extra_delete', args=[concert.pk, loop.index0]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+    </div>
+    {% endfor %}
+    <button class="repet-add"
+      hx-post="{{ url('extra_add', args=[concert.pk]) }}"
+      hx-vals='{"step": "{{ step.id }}"}'
+      hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Ajouter</button>
+  </div>
+
 {% else %}
   <div class="item">
     <div class="item-row">

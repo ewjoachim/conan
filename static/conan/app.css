@@ -158,6 +158,19 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .repet-add{font-family:'Josefin Sans',sans-serif;font-size:.7rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:.45rem 1rem;margin:.5rem 1rem;background:transparent;border:1.5px dashed var(--border);border-radius:5px;color:var(--muted);cursor:pointer;transition:border-color .15s,color .15s;display:block;}
 .repet-add:hover{border-color:var(--green);color:var(--green);}
 
+/* Extras dynamiques (étape "Autre chose ?") */
+.extras-list{padding:.5rem 1rem .25rem;}
+.extra-row{display:flex;align-items:center;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--green-pale);}
+.extra-row:last-of-type{border-bottom:none;}
+.extra-check{width:18px;height:18px;border:2px solid var(--border);border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;background:white;transition:all .15s;}
+.extra-check:hover{border-color:var(--green);}
+.extra-check.checked{background:var(--green);border-color:var(--green);}
+.extra-check.checked::after{content:'';display:block;width:9px;height:5px;border-left:2px solid white;border-bottom:2px solid white;transform:rotate(-45deg) translateY(-1px);}
+.extra-desc{font-family:'Nunito',sans-serif;font-size:.88rem;border:none;border-bottom:1.5px solid transparent;padding:.15rem .25rem;color:var(--ink);outline:none;flex:1;min-width:0;background:transparent;transition:border-color .2s;}
+.extra-desc:focus{border-bottom-color:var(--green);}
+.extra-desc::placeholder{color:var(--border);font-style:italic;}
+.extra-desc.done{text-decoration:line-through;color:var(--muted);}
+
 /* Card action buttons (archive / delete) */
 .card-actions{display:flex;gap:.4rem;flex-shrink:0;opacity:0;transition:opacity .15s;}
 .concert-card:hover .card-actions{opacity:1;}
