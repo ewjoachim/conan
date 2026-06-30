@@ -97,34 +97,17 @@ STEPS: tuple[Step, ...] = (
                 id="s0b_2",
                 label="Thème",
                 type="shorttext",
-                placeholder="ex : années 80",
+                placeholder="Japon only, blind test...",
             ),
             Item(id="s0b_3", label="Transmis aux Wacos", hint="Dans #waconan"),
         ),
     ),
     Step(
-        id="s0c",
-        num="Étape 3",
-        title="Vérification mandataire",
-        items=(
-            Item(
-                id="s0_2",
-                label="Espace d'échauffement",
-                hint="Le mandataire a bien confirmé qu'on aurait un lieu pour nous échauffer et laisser nos affaires.",
-            ),
-            Item(
-                id="s0c_1",
-                label="Confirmation des éléments",
-                hint="Nombre de Negi, PL, heure d'arrivée…",
-            ),
-        ),
-    ),
-    Step(
         id="s1",
-        num="Étape 4",
+        num="Étape 3",
         title="Actions préalables",
         items=(
-            Item(id="s1_0", label="Ajout du concert dans le NegiAgenda avec un ?"),
+            Item(id="s1_0", label="NegiAgenda", hint='Ajout du concert dans le NegiAgenda avec un "?"'),
             Item(
                 id="s1_1",
                 label="Création du sondage",
@@ -154,12 +137,12 @@ STEPS: tuple[Step, ...] = (
                 label="Décision",
                 hint="Télécharger le .xlsx, le cleaner, partager dans #waconan pour acter la participation.",
             ),
-            Item(id="s1_6", label="Supprimer ou enlever le ? du NegiAgenda"),
+            Item(id="s1_6", label="MAJ NegiAgenda", hint='Supprimer l\'évènement ou enlever son "?"'),
         ),
     ),
     Step(
         id="s2",
-        num="Étape 5",
+        num="Étape 4",
         title="Moodle",
         parallel=True,
         items=(
@@ -181,20 +164,16 @@ STEPS: tuple[Step, ...] = (
             Item(
                 id="s2_4",
                 label="Mail de récap",
-                hint=(
-                    "Objet : [Concert] Nom - Date. Valider participation, copier le lien "
-                    "Moodle, demander de prévenir si changement."
-                ),
+                hint="Objet : [Concert] Nom - Date. Acter le concert, copier le lien Moodle, demander de prévenir si changement.",
             ),
         ),
     ),
     Step(
         id="s2b",
-        num="Étape 5'",
-        title="Orga interne",
+        num="Étape 4'",
+        title="Comités internes",
         parallel=True,
         items=(
-            Item(id="s2b_1", label="ComCom au courant"),
             Item(
                 id="s2b_2",
                 label="Informations à transmettre à ComCom (#ComcomConan)",
@@ -206,17 +185,16 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s3",
-        num="Étape 6",
+        num="Étape 5",
         title="Suivi de la préparation",
         items=(
             Item(
                 id="s3_6",
-                label="Confirmation du mandataire reçue",
-                hint="Date, heure, durée, format revalidés + salle d'échauffement + sono ok.",
+                label="Vérifications avec le mandataire",
+                hint="Date, heure, durée, format revalidés + nombre de Negi, salle d'échauffement + sono ok.",
             ),
             Item(id="s3_1", label="PL reçue des Wacos"),
-            Item(id="s3_2", label="PL dans Moodle"),
-            Item(id="s3_3", label="PL envoyée par mail"),
+            Item(id="s3_3", label="PL sur Moodle et envoyée par mail"),
             Item(
                 id="s3_5",
                 label="SACEM ?",
@@ -239,7 +217,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s4",
-        num="Étape 7",
+        num="Étape 6",
         title="Communication interne",
         items=(
             Item(
@@ -254,7 +232,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s5",
-        num="Étape 8",
+        num="Étape 7",
         title="Autre chose ?",
         items=(Item(id="s5_extras", type="extras", label=""),),
     ),
