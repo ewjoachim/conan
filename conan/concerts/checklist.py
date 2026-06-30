@@ -107,7 +107,11 @@ STEPS: tuple[Step, ...] = (
         num="Étape 3",
         title="Actions préalables",
         items=(
-            Item(id="s1_0", label="NegiAgenda", hint='Ajout du concert dans le NegiAgenda avec un "?"'),
+            Item(
+                id="s1_0",
+                label="NegiAgenda",
+                hint='Ajout du concert dans le NegiAgenda avec un "?"',
+            ),
             Item(
                 id="s1_1",
                 label="Création du sondage",
@@ -137,7 +141,11 @@ STEPS: tuple[Step, ...] = (
                 label="Décision",
                 hint="Télécharger le .xlsx, le cleaner, partager dans #waconan pour acter la participation.",
             ),
-            Item(id="s1_6", label="MAJ NegiAgenda", hint='Supprimer l\'évènement ou enlever son "?"'),
+            Item(
+                id="s1_6",
+                label="MAJ NegiAgenda",
+                hint='Supprimer l\'évènement ou enlever son "?"',
+            ),
         ),
     ),
     Step(
