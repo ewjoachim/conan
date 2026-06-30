@@ -41,8 +41,6 @@ jobs:
     permissions:
       contents: read
       id-token: write # mint the OIDC token for WIF
-    env:
-      PR: ${{ github.event.pull_request.number }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -59,13 +57,26 @@ jobs:
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
 
-      - name: Build and push image to Artifact Registry
-        run: |
-          set -euo pipefail
-          gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
-          IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPO}/conan:pr-${PR}"
-          docker build -t "$IMAGE" .
-          docker push "$IMAGE"
+      - name: Authenticate Docker to Artifact Registry
+        run: gcloud auth configure-docker "${REGION}-docker.pkg.dev" --quiet
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
+        with:
+          images: ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.AR_REPO }}/conan
+          tags: |
+            type=ref,event=pr
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_VERSION=0.0.0+pr.${{ github.event.pull_request.number }}.${{ github.sha }}
 
   # Deploy the already-built image to Cloud Run and post the preview URL.
   # Not a good required check: depends on the app actually booting in prod-like
