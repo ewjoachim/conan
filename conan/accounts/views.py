@@ -43,7 +43,14 @@ def login_page(request: HttpRequest) -> HttpResponse:
         {"google_client_id": settings.GOOGLE_OAUTH_CLIENT_ID},
         request,
     )
-    return HttpResponse(html)
+    response = HttpResponse(html)
+    # Google Sign-In opens a popup to accounts.google.com, which sends the
+    # credential back via window.opener.postMessage().  Without this header the
+    # browser severs the opener reference for cross-origin popups, resulting in
+    # "Uncaught TypeError: can't access property 'postMessage', window.opener
+    # is null" inside Google's gsi/transform page.
+    response["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    return response
 
 
 @login_not_required
