@@ -88,14 +88,15 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 
 /* Steps */
 .steps{max-width:680px;margin:1.25rem auto 0;padding:0 1rem 2.5rem;display:flex;flex-direction:column;gap:.875rem;}
-.step{background:var(--white);border:1.5px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s;}
-.step.completed{border-color:var(--green);box-shadow:0 0 0 1px var(--green-light);}
-.step.parallel{border-left:4px solid var(--green-light);}
+.step{background:var(--white);border:2px solid var(--green);box-shadow:0 0 0 1px var(--green-light);border-radius:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s;}
+.step.completed{border-color:var(--border);box-shadow:none;}
+.step.parallel{border-left:4px solid var(--green);}
+.step.completed.parallel{border-left:4px solid var(--green-light);}
 .step-header{display:flex;align-items:center;gap:.75rem;padding:.875rem 1rem;cursor:pointer;user-select:none;background:var(--green-light);transition:background .15s;}
 .step.parallel .step-header{background:var(--green-light);}
 .step.completed .step-header{background:var(--green-light);}
-.step-num{font-family:'Josefin Sans',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);background:rgba(58,125,68,.1);padding:.15rem .45rem;border-radius:3px;white-space:nowrap;}
-.step.completed .step-num{background:var(--green);color:white;}
+.step-num{font-family:'Josefin Sans',sans-serif;font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:white;background:var(--green);padding:.15rem .45rem;border-radius:3px;white-space:nowrap;}
+.step.completed .step-num{background:rgba(58,125,68,.1);color:var(--green);}
 .step-title{font-family:'Josefin Sans',sans-serif;font-weight:700;font-size:.95rem;letter-spacing:.02em;flex:1;color:var(--ink);}
 .step-badge{font-family:'Josefin Sans',sans-serif;font-size:.6rem;letter-spacing:.08em;text-transform:uppercase;color:var(--green);border:1px solid var(--green-light);background:var(--white);padding:.1rem .4rem;border-radius:3px;white-space:nowrap;}
 .step-chevron{color:var(--muted);font-size:.65rem;transition:transform .2s;flex-shrink:0;}
