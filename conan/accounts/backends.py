@@ -11,10 +11,9 @@ Two backends, wired up in ``settings.AUTHENTICATION_BACKENDS``:
   anything unless ``DEBUG`` is true, so it can never authenticate anyone in
   production even if it leaks into the backend list.
 
-Access is gated by ``GOOGLE_ALLOWED``: verifying a Google token only proves
-*which* Google account it is, not that the account belongs here, so we fail
-**closed** in production when the list is empty. Each entry is either
-``@domain.tld`` (whole domain) or ``user@domain.tld`` (one address).
+Access is gated by a Workspace domain (``GOOGLE_ALLOWED_DOMAIN``): verifying a
+Google token only proves *which* Google account it is, not that the account
+belongs here, so we fail **closed** in production when no domain is configured.
 """
 
 import logging
@@ -63,20 +62,17 @@ def _verify_google_token(credential: str, client_id: str) -> dict[str, Any]:
 def _is_allowed(email: str) -> bool:
     """Whether ``email`` may sign in.
 
-    ``GOOGLE_ALLOWED`` is a list of entries matched after Google has marked the
-    address verified. Each entry is either ``@domain.tld`` (admits the whole
-    domain) or ``user@domain.tld`` (admits one address). An empty list fails
-    closed in production and, only in DEBUG, admits any verified Google account
-    for local convenience.
+    Sign-in is restricted to a single Workspace domain
+    (``GOOGLE_ALLOWED_DOMAIN``, e.g. ``negitachi.fr``). The email is matched on
+    its domain part only after Google has marked it verified (checked by the
+    caller). With no domain configured we admit any verified Google account in
+    DEBUG for local dev, but deny everyone in production — never silently open
+    the door.
     """
-    allowed = [e.strip().lower() for e in settings.GOOGLE_ALLOWED if e.strip()]
-    if not allowed:
+    domain = settings.GOOGLE_ALLOWED_DOMAIN.strip().lower()
+    if not domain:
         return bool(settings.DEBUG)
-    email_lower = email.lower()
-    return any(
-        email_lower.endswith(entry) if entry.startswith("@") else email_lower == entry
-        for entry in allowed
-    )
+    return email.lower().endswith(f"@{domain}")
 
 
 class GoogleIDTokenBackend(BaseBackend):
@@ -114,7 +110,7 @@ class GoogleIDTokenBackend(BaseBackend):
         email = claims.get("email", "")
         if not _is_allowed(email):
             logger.warning(
-                "Rejected Google login for %r (not in GOOGLE_ALLOWED)", email
+                "Rejected Google login for %r (not on the allowed domain)", email
             )
             return None
 

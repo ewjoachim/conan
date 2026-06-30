@@ -16,12 +16,11 @@ env = environ.Env(
     ALLOWED_HOSTS=(list, ["localhost", "127.0.0.1"]),
     CSRF_TRUSTED_ORIGINS=(list, []),
     # "Sign in with Google" (GIS ID-token flow): only the public client id is
-    # needed — there is no OAuth client *secret* in this flow. GOOGLE_ALLOWED
-    # is a comma-separated list of entries: `@domain.tld` admits the whole
-    # domain; `user@domain.tld` admits one address. An empty list fails closed
-    # in production.
+    # needed — there is no OAuth client *secret* in this flow. GOOGLE_ALLOWED_DOMAIN
+    # restricts sign-in to one Workspace domain; an empty value fails closed in
+    # production.
     GOOGLE_OAUTH_CLIENT_ID=(str, ""),
-    GOOGLE_ALLOWED=(list, ["@negitachi.fr"]),
+    GOOGLE_ALLOWED_DOMAIN=(str, "negitachi.fr"),
     # In prod the DB lives on the mounted volume at /data; dev defaults to ./data.
     DATABASE_PATH=(str, str(BASE_DIR / "data" / "conan.db")),
 )
@@ -36,7 +35,7 @@ CSRF_TRUSTED_ORIGINS = env("CSRF_TRUSTED_ORIGINS")
 
 # Google Sign-In (see accounts.views for the flow and security notes).
 GOOGLE_OAUTH_CLIENT_ID = env("GOOGLE_OAUTH_CLIENT_ID")
-GOOGLE_ALLOWED = env("GOOGLE_ALLOWED")
+GOOGLE_ALLOWED_DOMAIN = env("GOOGLE_ALLOWED_DOMAIN")
 
 # Anonymous users hitting a login-required view are redirected here.
 LOGIN_URL = "login"
