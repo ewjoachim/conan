@@ -123,8 +123,8 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .text-field-done-label.done{color:var(--green);}
 
 /* Yes/No items */
-.yesno-item{border-bottom:1px solid var(--border);padding:.7rem 1rem;background:var(--yesno-bg);}
-.yesno-item:last-child{border-bottom:none;}
+.yesno-item{border:2px solid white;border-radius:6px;padding:.7rem 1rem;background:var(--yesno-bg);margin:.5rem .75rem;}
+.yesno-item:last-child{margin-bottom:.75rem;}
 .yesno-row{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;}
 .yesno-label{font-size:.9rem;font-weight:700;flex:1;color:var(--green-dark);font-family:'Josefin Sans',sans-serif;letter-spacing:.02em;}
 .yesno-hint{font-size:.75rem;color:var(--muted);font-style:italic;margin-top:.2rem;font-weight:400;}
