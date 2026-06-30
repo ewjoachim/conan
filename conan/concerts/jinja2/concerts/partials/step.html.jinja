@@ -1,4 +1,4 @@
-<div class="step {% if is_step_done(step, state) %}completed{% endif %} {% if step.parallel %}parallel{% endif %} open" id="step_{{ step.id }}">
+<div class="step {% if is_step_done(step, state) %}completed{% endif %} {% if step.parallel %}parallel{% endif %}" id="step_{{ step.id }}">
   <div class="step-header" onclick="this.parentElement.classList.toggle('open')">
     <span class="step-title">{{ step.title }}</span>
     <span class="step-chevron">▼</span>
