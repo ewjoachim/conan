@@ -93,7 +93,12 @@ STEPS: tuple[Step, ...] = (
         title="Informations Waco",
         items=(
             Item(id="s0b_1", label="Durée", type="shorttext", placeholder="ex : 1h30"),
-            Item(id="s0b_2", label="Thème", type="shorttext", placeholder="ex : années 80"),
+            Item(
+                id="s0b_2",
+                label="Thème",
+                type="shorttext",
+                placeholder="ex : années 80",
+            ),
             Item(id="s0b_3", label="Transmis aux Wacos", hint="Dans #waconan"),
         ),
     ),
@@ -376,11 +381,7 @@ TEXT_KEYS: frozenset[str] = frozenset(
             for item in ITEMS_BY_ID.values()
             if item.type == "textfield"
         ),
-        *(
-            f"st_{item.id}"
-            for item in ITEMS_BY_ID.values()
-            if item.type == "shorttext"
-        ),
+        *(f"st_{item.id}" for item in ITEMS_BY_ID.values() if item.type == "shorttext"),
         "cotech_text",
     ]
 )
