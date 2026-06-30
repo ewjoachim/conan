@@ -12,16 +12,22 @@ overview and dev/run instructions; this file captures the conventions and the
 
 ## Tooling
 
-- **uv** for deps, **ruff** for lint/format, **ty** for type checking, **prek**
-  for hooks. Run everything through `uv run` (e.g. `uv run ruff check`,
-  `uv run ty check`, `uv run prek run --all-files`).
+- **uv** for deps (with user's agreement, install if not present),
+  **prek** (a modern rust-based `pre-commit` clone) is configured with all
+  linters and formatters.
+  If not present, it's worth installing the pre-commit hook with `uv run prek install`.
+  You can launch all linting at once with `uv run prek run --all-files`
+  or individual tools: **ruff** (`uv run ruff ...`), **ty** for type checking
+  (`uv run ty check`) etc. If you add new tools, don't forget to add them
+  to `prek`, and add configuration in `pyproject.toml` when possible.
 - Type checking is **ty**, not mypy/basedpyright. Django's dynamic attributes
   (`.objects`, field descriptors) resolve via the `django-types` package — keep
   it in the lint group.
 - The prek config is the **"no versions inside"** style: `builtin` file hooks +
   `local` hooks that shell out to `uv run`. Tool versions live in `uv.lock`,
   not in `.pre-commit-config.yaml`. Don't add pinned `rev:` repos.
-- This is a deployed app, not a library: `[tool.uv] package = false`.
+- This is a deployed app, not a library, so versions in `uv.lock` matter for
+  production.
 
 ## Commits
 
@@ -50,6 +56,9 @@ overview and dev/run instructions; this file captures the conventions and the
 
 ## Security principles (these came up and matter here)
 
+- **Developer may not be very security aware**. Repo was setup properly, but
+  evolves via vibecoding without proper PR reviews, so be mindful of security
+  implications, to a reasonable level.
 - **Never weaken a security boundary to paper over an operational
   convenience — fix the operational side instead.** Concrete example from this
   repo: the container healthcheck needed to reach the app, but rather than adding
