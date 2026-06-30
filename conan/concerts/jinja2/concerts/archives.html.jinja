@@ -1,0 +1,61 @@
+{% extends "base.html.jinja" %}
+{% block title %}Archives — CONAN{% endblock %}
+
+{% block body %}
+<div class="site-header">
+  <div class="header-inner">
+    <h1>CONAN <span>/ Archives</span></h1>
+    <p>Negitachi — outil interne</p>
+    {% if request.user.is_authenticated %}
+    <form class="user-bar" method="POST" action="{{ url('logout') }}">
+      {{ csrf_input }}
+      <span class="user-email">{{ request.user.email }}</span>
+      <button type="submit" class="btn-logout">Déconnexion</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+<div class="main">
+  <div class="top-bar">
+    <span class="section-title">{{ count }} concert{{ 's' if count > 1 else '' }} archivé{{ 's' if count > 1 else '' }}</span>
+    <a class="btn-archives" href="{{ url('list') }}">← Retour</a>
+  </div>
+  <div class="concert-list">
+    {% if not concerts %}
+    <div class="empty-state">
+      <div style="font-size:2rem">📦</div>
+      <p>Aucun concert archivé.</p>
+    </div>
+    {% else %}
+    {% for c in concerts %}
+    <a class="concert-card archived" href="{{ url('detail', args=[c.pk]) }}">
+      <div class="concert-info">
+        <div class="concert-name">{{ c.name or 'Concert sans nom' }}</div>
+        {% set meta = [c.date, c.respo] | select | join(' · ') %}
+        {% if meta %}<div class="concert-meta">{{ meta }}</div>{% endif %}
+      </div>
+      <div class="concert-prog">
+        <span class="prog-pct">{{ c.progress }}%</span>
+        <div class="prog-bar">
+          <div class="prog-bar-fill" style="width:{{ c.progress }}%"></div>
+        </div>
+      </div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <form method="POST" action="{{ url('unarchive', args=[c.pk]) }}">
+          {{ csrf_input }}
+          <button type="submit" class="btn-archive">Désarchiver</button>
+        </form>
+        <form method="POST" action="{{ url('delete', args=[c.pk]) }}">
+          {{ csrf_input }}
+          <button type="submit" class="btn-delete"
+            onclick="return confirm('Supprimer « {{ c.name or 'ce concert' }} » ? Cette action est irréversible.')">
+            Supprimer
+          </button>
+        </form>
+      </div>
+    </a>
+    {% endfor %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

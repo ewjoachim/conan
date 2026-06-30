@@ -10,10 +10,11 @@ class Concert(models.Model):
     """
 
     name = models.CharField(max_length=200, default="", blank=True)
-    date = models.CharField(max_length=100, default="", blank=True)
+    date = models.DateField(null=True, blank=True)
     respo = models.CharField(max_length=100, default="", blank=True)
     mandataire = models.TextField(default="", blank=True)
     state = models.JSONField(default=dict, blank=True)
+    archived = models.BooleanField(default=False)
     progress = models.IntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

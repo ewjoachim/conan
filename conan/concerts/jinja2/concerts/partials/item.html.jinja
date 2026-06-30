@@ -37,6 +37,17 @@
     </div>
   {% endif %}
 
+{% elif item.type == 'shorttext' %}
+  <div class="item">
+    <div class="shorttext-row">
+      <span class="shorttext-label">{{ item.label }}</span>
+      <input class="shorttext-input" type="text" value="{{ state.get('st_' + item.id, '') }}"
+        placeholder="{{ item.placeholder }}" name="text"
+        hx-post="{{ url('field', args=[concert.pk]) }}" hx-vals='{"key": "st_{{ item.id }}"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+    </div>
+  </div>
+
 {% elif item.type == 'textfield' %}
   <div class="item">
     <div class="item-content">
@@ -61,7 +72,6 @@
   <div class="yesno-item">
     <div class="yesno-row">
       <span class="yesno-label">{{ item.label }}</span>
-      <span class="yesno-question">Pertinent ?</span>
       <div class="yesno-btns">
         <button class="yn-btn {% if yn == 'y' %}active-yes{% endif %}"
           hx-post="{{ url('yesno', args=[concert.pk]) }}"
@@ -84,6 +94,85 @@
       {% endfor %}
     </div>
   {% endif %}
+
+{% elif item.type == 'repets' %}
+  {% set yn = state.get('yn_' + item.id) %}
+  <div class="yesno-item">
+    <div class="yesno-row">
+      <span class="yesno-label">{{ item.label }}</span>
+      <div class="yesno-btns">
+        <button class="yn-btn {% if yn == 'y' %}active-yes{% endif %}"
+          hx-post="{{ url('yesno', args=[concert.pk]) }}"
+          hx-vals='{"item_id": "{{ item.id }}", "val": "y", "step": "{{ step.id }}"}'
+          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">Oui</button>
+        <button class="yn-btn {% if yn == 'n' %}active-neutral{% endif %}"
+          hx-post="{{ url('yesno', args=[concert.pk]) }}"
+          hx-vals='{"item_id": "{{ item.id }}", "val": "n", "step": "{{ step.id }}"}'
+          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">Non</button>
+      </div>
+    </div>
+  </div>
+  {% if yn == 'y' %}
+    <div class="sub-items">
+      <div class="sub-item">
+        <div class="sub-check {% if state.get(item.id + '_sondage_fait') %}checked{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_sondage_fait', step.id) | safe }}></div>
+        <span class="sub-label {% if state.get(item.id + '_sondage_fait') %}done{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_sondage_fait', step.id) | safe }}>Sondage fait</span>
+      </div>
+      <div class="sub-item">
+        <div class="sub-check {% if state.get(item.id + '_sondage_depile') %}checked{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_sondage_depile', step.id) | safe }}></div>
+        <span class="sub-label {% if state.get(item.id + '_sondage_depile') %}done{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_sondage_depile', step.id) | safe }}>Sondage dépilé</span>
+      </div>
+      <div class="sub-item">
+        <div class="sub-check {% if state.get(item.id + '_info_transmises') %}checked{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_info_transmises', step.id) | safe }}></div>
+        <span class="sub-label {% if state.get(item.id + '_info_transmises') %}done{% endif %}" {{ toggle_attrs(concert.pk, item.id + '_info_transmises', step.id) | safe }}>Informations transmises à Membres</span>
+      </div>
+      {% set repets = state.get('repets', []) %}
+      {% for repet in repets %}
+      <div class="repet-row">
+        <span class="repet-num">Répet {{ loop.index }}</span>
+        <input class="repet-date" type="date" value="{{ repet.date or '' }}" name="date"
+          hx-post="{{ url('repet_update', args=[concert.pk, loop.index0]) }}"
+          hx-trigger="change" hx-swap="none">
+        <input class="repet-lieu" type="text" placeholder="Lieu" value="{{ repet.lieu or '' }}" name="lieu"
+          hx-post="{{ url('repet_update', args=[concert.pk, loop.index0]) }}"
+          hx-trigger="input changed delay:800ms" hx-swap="none">
+        <button class="repet-del"
+          hx-post="{{ url('repet_delete', args=[concert.pk, loop.index0]) }}"
+          hx-vals='{"step": "{{ step.id }}"}'
+          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+      </div>
+      {% endfor %}
+      <button class="repet-add"
+        hx-post="{{ url('repet_add', args=[concert.pk]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Répétition</button>
+    </div>
+  {% endif %}
+
+{% elif item.type == 'extras' %}
+  {% set extras = state.get('extras', []) %}
+  <div class="extras-list">
+    {% for extra in extras %}
+    <div class="extra-row">
+      <div class="extra-check {% if extra.done %}checked{% endif %}"
+        hx-post="{{ url('extra_toggle', args=[concert.pk, loop.index0]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML"></div>
+      <input class="extra-desc {% if extra.done %}done{% endif %}" type="text"
+        placeholder="Description…" value="{{ extra.desc or '' }}" name="desc"
+        hx-post="{{ url('extra_update', args=[concert.pk, loop.index0]) }}"
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+      <button class="repet-del"
+        hx-post="{{ url('extra_delete', args=[concert.pk, loop.index0]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+    </div>
+    {% endfor %}
+    <button class="repet-add"
+      hx-post="{{ url('extra_add', args=[concert.pk]) }}"
+      hx-vals='{"step": "{{ step.id }}"}'
+      hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Ajouter</button>
+  </div>
 
 {% else %}
   <div class="item">
