@@ -33,7 +33,7 @@ class Sub:
 class Item:
     id: str
     label: str
-    type: str = "simple"  # one of: simple | yesno | textfield | cotech | repets
+    type: str = "simple"  # one of: simple | yesno | textfield | shorttext | cotech | repets | extras
     hint: str = ""  # may contain trusted HTML (rendered with |safe)
     placeholder: str = ""
     subs: tuple[Sub, ...] = ()
@@ -59,7 +59,7 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="s0",
         num="Étape 1",
-        title="Vérification mandataire",
+        title="Conditions du concert",
         items=(
             Item(
                 id="s0_1",
@@ -74,21 +74,49 @@ STEPS: tuple[Step, ...] = (
                     Sub(id="s0_1f", label="Facture transmise (sauf si Chorus Pro)"),
                 ),
             ),
+            Item(id="s0_3", label="Catering ?", type="yesno"),
+            Item(
+                id="s2b_5",
+                label="Organisation des transports ?",
+                type="yesno",
+                subs=(
+                    Sub(id="s2b_5a", label="Sondage transport dans Moodle"),
+                    Sub(id="s2b_5b", label="Dépouillage du sondage"),
+                    Sub(id="s2b_5c", label="Création d'un Google Doc de coordination"),
+                ),
+            ),
+        ),
+    ),
+    Step(
+        id="s0b",
+        num="Étape 2",
+        title="Informations Waco",
+        items=(
+            Item(id="s0b_1", label="Durée", type="shorttext", placeholder="ex : 1h30"),
+            Item(id="s0b_2", label="Thème", type="shorttext", placeholder="ex : années 80"),
+            Item(id="s0b_3", label="Transmis aux Wacos", hint="Dans #waconan"),
+        ),
+    ),
+    Step(
+        id="s0c",
+        num="Étape 3",
+        title="Vérification mandataire",
+        items=(
             Item(
                 id="s0_2",
                 label="Espace d'échauffement",
                 hint="Le mandataire a bien confirmé qu'on aurait un lieu pour nous échauffer et laisser nos affaires.",
             ),
             Item(
-                id="s0_3",
-                label="Catering ?",
-                type="yesno",
+                id="s0c_1",
+                label="Confirmation des éléments",
+                hint="Nombre de Negi, PL, heure d'arrivée…",
             ),
         ),
     ),
     Step(
         id="s1",
-        num="Étape 2",
+        num="Étape 4",
         title="Actions préalables",
         items=(
             Item(id="s1_0", label="Ajout du concert dans le NegiAgenda avec un ?"),
@@ -126,7 +154,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s2",
-        num="Étape 3",
+        num="Étape 5",
         title="Moodle",
         parallel=True,
         items=(
@@ -157,7 +185,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s2b",
-        num="Étape 3'",
+        num="Étape 5'",
         title="Orga interne",
         parallel=True,
         items=(
@@ -169,21 +197,11 @@ STEPS: tuple[Step, ...] = (
                 placeholder="Pack presse, description, logos…",
             ),
             Item(id="s2b_4", label="CoTech au courant", type="cotech"),
-            Item(
-                id="s2b_5",
-                label="Organisation des transports ?",
-                type="yesno",
-                subs=(
-                    Sub(id="s2b_5a", label="Sondage transport dans Moodle"),
-                    Sub(id="s2b_5b", label="Dépouillage du sondage"),
-                    Sub(id="s2b_5c", label="Création d'un Google Doc de coordination"),
-                ),
-            ),
         ),
     ),
     Step(
         id="s3",
-        num="Étape 4",
+        num="Étape 6",
         title="Suivi de la préparation",
         items=(
             Item(
@@ -216,7 +234,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s4",
-        num="Étape 5",
+        num="Étape 7",
         title="Communication interne",
         items=(
             Item(
@@ -231,7 +249,7 @@ STEPS: tuple[Step, ...] = (
     ),
     Step(
         id="s5",
-        num="Étape 6",
+        num="Étape 8",
         title="Autre chose ?",
         items=(Item(id="s5_extras", type="extras", label=""),),
     ),
@@ -253,6 +271,8 @@ def item_done(item: Item, state: State) -> bool:
         return True  # extras are optional, never block step completion
     if item.type == "cotech":
         return is_cotech_done(state)
+    if item.type == "shorttext":
+        return bool(state.get(f"st_{item.id}"))
     if item.type == "textfield":
         return bool(state.get(f"tf_{item.id}"))
     if item.type in {"yesno", "repets"}:
@@ -355,6 +375,11 @@ TEXT_KEYS: frozenset[str] = frozenset(
             f"tft_{item.id}"
             for item in ITEMS_BY_ID.values()
             if item.type == "textfield"
+        ),
+        *(
+            f"st_{item.id}"
+            for item in ITEMS_BY_ID.values()
+            if item.type == "shorttext"
         ),
         "cotech_text",
     ]

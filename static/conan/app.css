@@ -114,6 +114,10 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .item-label.done{text-decoration:line-through;color:var(--muted);font-weight:400;}
 .item-hint{margin-top:.3rem;font-size:.775rem;color:var(--muted);font-style:italic;line-height:1.5;font-weight:400;}
 .item-hint a{color:var(--green);text-underline-offset:2px;}
+.shorttext-row{display:flex;align-items:center;gap:.75rem;}
+.shorttext-label{font-size:.85rem;font-weight:700;color:var(--ink);white-space:nowrap;min-width:3.5rem;}
+.shorttext-input{font-family:'Nunito',sans-serif;font-size:.85rem;flex:1;border:1.5px solid var(--border);border-radius:6px;padding:.35rem .6rem;color:var(--ink);background:var(--green-pale);outline:none;transition:border-color .2s;}
+.shorttext-input:focus{border-color:var(--green);}
 .text-field-wrap{margin-top:.5rem;}
 .text-field-area{font-family:'Nunito',sans-serif;font-size:.82rem;width:100%;min-height:64px;border:1.5px solid var(--border);border-radius:6px;padding:.5rem .65rem;color:var(--ink);background:var(--green-pale);resize:vertical;outline:none;line-height:1.5;transition:border-color .2s;}
 .text-field-area:focus{border-color:var(--green);}

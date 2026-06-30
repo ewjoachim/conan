@@ -37,6 +37,17 @@
     </div>
   {% endif %}
 
+{% elif item.type == 'shorttext' %}
+  <div class="item">
+    <div class="shorttext-row">
+      <span class="shorttext-label">{{ item.label }}</span>
+      <input class="shorttext-input" type="text" value="{{ state.get('st_' + item.id, '') }}"
+        placeholder="{{ item.placeholder }}" name="text"
+        hx-post="{{ url('field', args=[concert.pk]) }}" hx-vals='{"key": "st_{{ item.id }}"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+    </div>
+  </div>
+
 {% elif item.type == 'textfield' %}
   <div class="item">
     <div class="item-content">
