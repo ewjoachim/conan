@@ -87,8 +87,9 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .btn-fold:hover{background:var(--green-light);color:var(--green-dark);}
 
 /* Steps */
-.steps{max-width:680px;margin:1.25rem auto 0;padding:0 1rem 2.5rem;display:flex;flex-direction:column;gap:.875rem;}
-.step{background:var(--white);border:2px solid var(--green);box-shadow:0 0 0 1px var(--green-light);border-radius:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s;align-self:stretch;}
+.steps{max-width:680px;margin:1.25rem auto 0;padding:0 1rem 2.5rem;}
+.step{background:var(--white);border:2px solid var(--green);box-shadow:0 0 0 1px var(--green-light);border-radius:8px;overflow:hidden;transition:border-color .2s,box-shadow .2s;display:block;margin-bottom:.875rem;}
+.step:last-child{margin-bottom:0;}
 .step.completed{border-color:var(--border);box-shadow:none;}
 .step.parallel{border-left:4px solid var(--green);}
 .step.completed.parallel{border-left:4px solid var(--green-light);}
