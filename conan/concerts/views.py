@@ -12,6 +12,7 @@ silent (HTTP 204) so the user's textarea keeps focus while typing.
 
 # login_not_required exists since Django 5.1 (our floor is 5.2); the django-types
 # stubs lag behind, so silence ty's import error here.
+from datetime import date
 from typing import Any
 
 from django.contrib.auth.decorators import (
@@ -65,11 +66,9 @@ def concert_archives(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def concert_create(request: HttpRequest) -> HttpResponse:
-    from datetime import date as parse_date
-
     raw_date = request.POST.get("date", "").strip()
     try:
-        parsed_date = parse_date.fromisoformat(raw_date) if raw_date else None
+        parsed_date = date.fromisoformat(raw_date) if raw_date else None
     except ValueError:
         parsed_date = None
     concert = Concert.objects.create(
@@ -186,9 +185,7 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
     concert = get_object_or_404(Concert, pk=pk)
     value: Any = request.POST.get("value", "").strip()
     if field == "date":
-        from datetime import date as date_type
-
-        value = date_type.fromisoformat(value) if value else None
+        value = date.fromisoformat(value) if value else None
     setattr(concert, field, value)
     concert.save(update_fields=[field, "updated_at"])
 
