@@ -24,6 +24,15 @@
     document.body.addEventListener('htmx:afterRequest', function (e) {
       setSave(e.detail.successful ? 'saved' : '');
     });
+    // After HTMX re-renders a step (outerHTML swap), re-open it so the user's
+    // view doesn't collapse mid-interaction.
+    document.body.addEventListener('htmx:afterSwap', function (e) {
+      var old = e.detail.target;
+      if (old && old.id && old.id.startsWith('step_')) {
+        var newEl = document.getElementById(old.id);
+        if (newEl) newEl.classList.add('open');
+      }
+    });
   </script>
   {% block scripts %}{% endblock %}
 </body>
