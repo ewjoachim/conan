@@ -37,6 +37,9 @@
         {% set meta = [c.date, c.respo] | select | join(' · ') %}
         {% if meta %}<div class="concert-meta">{{ meta }}</div>{% endif %}
       </div>
+      {% if c.pk in recap_warnings %}
+      <div class="recap-warning" title="Mail récap à envoyer dans moins de 5 jours !">⚠️</div>
+      {% endif %}
       <div class="concert-prog">
         <span class="prog-pct">{{ c.progress }}%</span>
         <div class="prog-bar">
