@@ -12,8 +12,12 @@ silent (HTTP 204) so the user's textarea keeps focus while typing.
 
 # login_not_required exists since Django 5.1 (our floor is 5.2); the django-types
 # stubs lag behind, so silence ty's import error here.
+from datetime import date
+from typing import Any
+
 from django.contrib.auth.decorators import (
     login_not_required,  # ty: ignore[unresolved-import]
+    login_required,
 )
 from django.db import connection, transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
@@ -41,7 +45,7 @@ def healthz(request: HttpRequest) -> HttpResponse:
 
 
 def concert_list(request: HttpRequest) -> HttpResponse:
-    concerts = Concert.objects.all()
+    concerts = Concert.objects.filter(archived=False)
     html = render_to_string(
         "concerts/list.html.jinja",
         {"concerts": concerts, "count": concerts.count()},
@@ -50,11 +54,26 @@ def concert_list(request: HttpRequest) -> HttpResponse:
     return HttpResponse(html)
 
 
+def concert_archives(request: HttpRequest) -> HttpResponse:
+    concerts = Concert.objects.filter(archived=True)
+    html = render_to_string(
+        "concerts/archives.html.jinja",
+        {"concerts": concerts, "count": concerts.count()},
+        request,
+    )
+    return HttpResponse(html)
+
+
 @require_POST
 def concert_create(request: HttpRequest) -> HttpResponse:
+    raw_date = request.POST.get("date", "").strip()
+    try:
+        parsed_date = date.fromisoformat(raw_date) if raw_date else None
+    except ValueError:
+        parsed_date = None
     concert = Concert.objects.create(
         name=request.POST.get("name", "").strip(),
-        date=request.POST.get("date", "").strip(),
+        date=parsed_date,
         respo=request.POST.get("respo", "").strip(),
     )
     return redirect("detail", pk=concert.pk)
@@ -164,7 +183,10 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
         return HttpResponseBadRequest("unknown field")
 
     concert = get_object_or_404(Concert, pk=pk)
-    setattr(concert, field, request.POST.get("value", "").strip())
+    value: Any = request.POST.get("value", "").strip()
+    if field == "date":
+        value = date.fromisoformat(value) if value else None
+    setattr(concert, field, value)
     concert.save(update_fields=[field, "updated_at"])
 
     if field == "name":
@@ -175,3 +197,140 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
         )
         return HttpResponse(html)
     return HttpResponse(status=204)
+
+
+@require_POST
+def extra_add(request: HttpRequest, pk: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        extras: list[dict[str, object]] = list(concert.state.get("extras", []))
+        extras.append({"desc": "", "done": False})
+        concert.state["extras"] = extras
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+@require_POST
+def extra_delete(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        extras = list(concert.state.get("extras", []))
+        if 0 <= idx < len(extras):
+            extras.pop(idx)
+        concert.state["extras"] = extras
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+@require_POST
+def extra_update(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        extras = list(concert.state.get("extras", []))
+        if 0 <= idx < len(extras):
+            extra = dict(extras[idx])
+            extra["desc"] = request.POST.get("desc", "").strip()
+            extras[idx] = extra
+        concert.state["extras"] = extras
+        concert.save(update_fields=["state", "updated_at"])
+    return HttpResponse(status=204)
+
+
+@require_POST
+def extra_toggle(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        extras = list(concert.state.get("extras", []))
+        if 0 <= idx < len(extras):
+            extra = dict(extras[idx])
+            extra["done"] = not extra.get("done")
+            extras[idx] = extra
+        concert.state["extras"] = extras
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+def _render_step(request: HttpRequest, concert: Concert, step_id: str) -> HttpResponse:
+    step = checklist.STEPS_BY_ID[step_id]
+    return HttpResponse(_render_step_and_progress(request, concert, step))
+
+
+@require_POST
+def repet_add(request: HttpRequest, pk: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        repets: list[dict[str, str | None]] = list(concert.state.get("repets", []))
+        repets.append({"date": None, "lieu": ""})
+        concert.state["repets"] = repets
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+@require_POST
+def repet_delete(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    step_id = request.POST.get("step", "")
+    if step_id not in checklist.STEPS_BY_ID:
+        return HttpResponseBadRequest("unknown step")
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        repets = list(concert.state.get("repets", []))
+        if 0 <= idx < len(repets):
+            repets.pop(idx)
+        concert.state["repets"] = repets
+        concert.save(update_fields=["state", "updated_at"])
+    return _render_step(request, concert, step_id)
+
+
+@require_POST
+def repet_update(request: HttpRequest, pk: int, idx: int) -> HttpResponse:
+    with transaction.atomic():
+        concert = get_object_or_404(Concert, pk=pk)
+        repets = list(concert.state.get("repets", []))
+        if 0 <= idx < len(repets):
+            repet = dict(repets[idx])
+            if "date" in request.POST:
+                repet["date"] = request.POST["date"].strip() or None
+            if "lieu" in request.POST:
+                repet["lieu"] = request.POST["lieu"].strip()
+            repets[idx] = repet
+        concert.state["repets"] = repets
+        concert.save(update_fields=["state", "updated_at"])
+    return HttpResponse(status=204)
+
+
+@require_POST
+@login_required
+def concert_archive(request: HttpRequest, pk: int) -> HttpResponse:
+    concert = get_object_or_404(Concert, pk=pk)
+    concert.archived = True
+    concert.save(update_fields=["archived", "updated_at"])
+    return redirect("list")
+
+
+@require_POST
+@login_required
+def concert_unarchive(request: HttpRequest, pk: int) -> HttpResponse:
+    concert = get_object_or_404(Concert, pk=pk)
+    concert.archived = False
+    concert.save(update_fields=["archived", "updated_at"])
+    return redirect("archives")
+
+
+@require_POST
+@login_required
+def concert_delete(request: HttpRequest, pk: int) -> HttpResponse:
+    concert = get_object_or_404(Concert, pk=pk)
+    concert.delete()
+    return redirect("list")

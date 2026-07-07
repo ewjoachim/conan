@@ -29,9 +29,9 @@
     </div>
     <div class="meta-field">
       <span class="meta-label">Date</span>
-      <input class="meta-input" type="text" value="{{ concert.date }}" placeholder="—" name="value"
+      <input class="meta-input" type="date" value="{{ concert.date.isoformat() if concert.date else '' }}" name="value"
         hx-post="{{ url('meta', args=[concert.pk]) }}" hx-vals='{"field": "date"}'
-        hx-trigger="input changed delay:800ms" hx-swap="none">
+        hx-trigger="change" hx-swap="none">
     </div>
     <div class="meta-field">
       <span class="meta-label">Respo Negi</span>
@@ -48,6 +48,13 @@
   </div>
 </div>
 
+<div class="steps-toolbar">
+  <p class="steps-intro">L'ordre des actions peut varier, <em>« on s'adapte ! »</em></p>
+  <div class="fold-btns">
+    <button class="btn-fold" onclick="document.querySelectorAll('.step').forEach(s=>s.classList.add('open'))">Tout déplier</button>
+    <button class="btn-fold" onclick="document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'))">Tout replier</button>
+  </div>
+</div>
 <div class="steps">
   {% for step in steps %}{% include "concerts/partials/step.html.jinja" %}{% endfor %}
 </div>

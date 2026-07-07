@@ -18,13 +18,16 @@
 <div class="main">
   <div class="top-bar">
     <span class="section-title">{{ count }} concert{{ 's' if count > 1 else '' }}</span>
-    <button class="btn-new" onclick="document.getElementById('modal').classList.add('open')">+ Nouveau concert</button>
+    <div class="top-bar-actions">
+      <a class="btn-archives" href="{{ url('archives') }}">Archives</a>
+      <button class="btn-new" onclick="document.getElementById('modal').classList.add('open')">+ Nouveau concert</button>
+    </div>
   </div>
   <div class="concert-list">
     {% if not concerts %}
     <div class="empty-state">
       <div style="font-size:2rem">🎵</div>
-      <p>Aucun concert pour l'instant.<br>Crée le premier !</p>
+      <p>Aucun concert actif pour l'instant.<br>Crées en un !</p>
     </div>
     {% else %}
     {% for c in concerts %}
@@ -39,6 +42,19 @@
         <div class="prog-bar">
           <div class="prog-bar-fill" style="width:{{ c.progress }}%"></div>
         </div>
+      </div>
+      <div class="card-actions" onclick="event.stopPropagation()">
+        <form method="POST" action="{{ url('archive', args=[c.pk]) }}">
+          {{ csrf_input }}
+          <button type="submit" class="btn-archive">Archiver</button>
+        </form>
+        <form method="POST" action="{{ url('delete', args=[c.pk]) }}">
+          {{ csrf_input }}
+          <button type="submit" class="btn-delete"
+            onclick="return confirm('Supprimer « {{ c.name or 'ce concert' }} » ? Cette action est irréversible.')">
+            Supprimer
+          </button>
+        </form>
       </div>
     </a>
     {% endfor %}
@@ -58,7 +74,7 @@
       </div>
       <div class="form-field">
         <label class="form-label" for="date">Date</label>
-        <input class="form-input" type="text" id="date" name="date" placeholder="Ex : 15 mars 2025">
+        <input class="form-input" type="date" id="date" name="date">
       </div>
       <div class="form-field">
         <label class="form-label" for="respo">Respo Negi</label>
