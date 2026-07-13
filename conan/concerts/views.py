@@ -198,11 +198,7 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
     concert = get_object_or_404(Concert, pk=pk)
     value: Any = request.POST.get("value", "").strip()
     if field == "date":
-<<<<<<< HEAD
-        value = date.fromisoformat(value) if value else None
-=======
         value = datetime.date.fromisoformat(value) if value else None
->>>>>>> f36a5e3 (feat: warning badge on concert list when mail récap not sent within 5 days)
     setattr(concert, field, value)
     concert.save(update_fields=[field, "updated_at"])
 
