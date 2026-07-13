@@ -31,7 +31,7 @@
     </div>
     {% else %}
     {% for c in concerts %}
-    <a class="concert-card" href="{{ url('detail', args=[c.pk]) }}">
+    <a class="concert-card{% if c.pk in recap_warnings %} recap-warning{% endif %}" href="{{ url('detail', args=[c.pk]) }}">
       <div class="concert-info">
         <div class="concert-name">{{ c.name or 'Concert sans nom' }}</div>
         {% set meta = [c.date, c.respo] | select | join(' · ') %}
@@ -52,7 +52,7 @@
           {{ csrf_input }}
           <button type="submit" class="btn-delete"
             onclick="return confirm('Supprimer « {{ c.name or 'ce concert' }} » ? Cette action est irréversible.')">
-            Supprimer
+            🗑️
           </button>
         </form>
       </div>

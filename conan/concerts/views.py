@@ -12,14 +12,14 @@ silent (HTTP 204) so the user's textarea keeps focus while typing.
 
 # login_not_required exists since Django 5.1 (our floor is 5.2); the django-types
 # stubs lag behind, so silence ty's import error here.
-from datetime import date
+import datetime
 from typing import Any
 
 from django.contrib.auth.decorators import (
     login_not_required,  # ty: ignore[unresolved-import]
     login_required,
 )
-from django.db import connection, transaction
+from django.db import connection, models, transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
@@ -45,10 +45,23 @@ def healthz(request: HttpRequest) -> HttpResponse:
 
 
 def concert_list(request: HttpRequest) -> HttpResponse:
-    concerts = Concert.objects.filter(archived=False)
+    concerts = Concert.objects.filter(archived=False).order_by(
+        models.F("date").asc(nulls_last=True), "created_at"
+    )
+    today = datetime.datetime.now(tz=datetime.UTC).date()
+    warn_before = today + datetime.timedelta(days=5)
+    recap_warnings: set[int] = {
+        c.pk
+        for c in concerts
+        if c.date and c.date <= warn_before and not c.state.get("s4_1")
+    }
     html = render_to_string(
         "concerts/list.html.jinja",
-        {"concerts": concerts, "count": concerts.count()},
+        {
+            "concerts": concerts,
+            "count": concerts.count(),
+            "recap_warnings": recap_warnings,
+        },
         request,
     )
     return HttpResponse(html)
@@ -68,7 +81,7 @@ def concert_archives(request: HttpRequest) -> HttpResponse:
 def concert_create(request: HttpRequest) -> HttpResponse:
     raw_date = request.POST.get("date", "").strip()
     try:
-        parsed_date = date.fromisoformat(raw_date) if raw_date else None
+        parsed_date = datetime.date.fromisoformat(raw_date) if raw_date else None
     except ValueError:
         parsed_date = None
     concert = Concert.objects.create(
@@ -185,7 +198,7 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
     concert = get_object_or_404(Concert, pk=pk)
     value: Any = request.POST.get("value", "").strip()
     if field == "date":
-        value = date.fromisoformat(value) if value else None
+        value = datetime.date.fromisoformat(value) if value else None
     setattr(concert, field, value)
     concert.save(update_fields=[field, "updated_at"])
 
