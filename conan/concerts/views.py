@@ -19,7 +19,7 @@ from django.contrib.auth.decorators import (
     login_not_required,  # ty: ignore[unresolved-import]
     login_required,
 )
-from django.db import connection, transaction
+from django.db import connection, models, transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
@@ -45,13 +45,15 @@ def healthz(request: HttpRequest) -> HttpResponse:
 
 
 def concert_list(request: HttpRequest) -> HttpResponse:
-    concerts = Concert.objects.filter(archived=False)
+    concerts = Concert.objects.filter(archived=False).order_by(
+        models.F("date").asc(nulls_last=True), "created_at"
+    )
     today = datetime.datetime.now(tz=datetime.UTC).date()
     warn_before = today + datetime.timedelta(days=5)
     recap_warnings: set[int] = {
         c.pk
         for c in concerts
-        if c.date and today <= c.date <= warn_before and not c.state.get("s4_1")
+        if c.date and c.date <= warn_before and not c.state.get("s4_1")
     }
     html = render_to_string(
         "concerts/list.html.jinja",
