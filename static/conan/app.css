@@ -1,9 +1,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Josefin+Sans:wght@400;600;700&display=swap');
 
 :root {
-  --green:#3a7d44;--green-dark:#2a5e32;--green-light:#d6edd9;--green-pale:#f4faf4;
-  --green-mid:#eaf4eb;--white:#ffffff;--ink:#1a2e1d;--muted:#6b8c6e;--border:#c2ddc5;
-  --cond-bg:#f0f8f1;--yesno-bg:#eef6ef;
+  --green:#2e7d32;--green-dark:#1b5e20;--green-light:#c8e6c9;--green-pale:#f1f8e9;
+  --green-mid:#e8f5e9;--white:#ffffff;--ink:#1a2e1a;--muted:#5a7a5a;--border:#a5d6a7;
+  --cond-bg:#f1f8f1;--yesno-bg:#edf5ed;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--ink);display:flex;flex-direction:column;min-height:100vh;}
@@ -192,6 +192,22 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 
 /* Footer — full-width green bar matching the header */
 .version-footer{background:var(--green);color:rgba(255,255,255,.65);text-align:center;padding:.85rem 1rem;font-size:.7rem;font-family:'Josefin Sans',sans-serif;letter-spacing:.06em;}
+
+/* Responsive mobile */
+@media (max-width:520px){
+  .main{margin-top:1rem;}
+  .meta-card{grid-template-columns:1fr;}
+  .meta-field.full{grid-column:1;}
+  .header-top{flex-wrap:wrap;gap:.5rem;}
+  .header-top .user-bar{width:100%;}
+  .prog-bar{width:80px;}
+  .concert-card{flex-wrap:wrap;gap:.5rem;}
+  .concert-prog{flex-direction:row;align-items:center;gap:.5rem;}
+  .prog-bar{width:80px;}
+  .card-actions{opacity:1;}
+  .repet-row{flex-wrap:wrap;gap:.4rem;}
+  .repet-date{width:100%;flex-shrink:1;}
+}
 
 /* Login page */
 .login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
