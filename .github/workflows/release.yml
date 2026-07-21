@@ -1,16 +1,22 @@
 name: Release
 
-# Prod image path: build + push the image to GHCR, release-driven only.
+# Prod image path: build + push the image to GHCR.
 #
-# Not triggered on push:main — a plain main build never pushed anything (push is
-# gated to release/dispatch) and metadata-action's version output there is
-# "latest", which uv-dynamic-versioning rejects as a non-PEP-440 version. PRs are
-# already build-verified by pr-preview.yml (same Dockerfile, against Artifact
-# Registry), so post-merge re-verification on main is redundant.
+# Continuous deployment: every push to main mints the next calendar version, cuts
+# a GitHub release with auto-generated notes, then builds + pushes the image
+# tagged with that version (and `latest`). A release published from the GitHub UI
+# builds + pushes the existing tag without re-bumping.
+#
+# The release job runs *before* the build on purpose, so a real PEP-440 version
+# exists by build time: a plain main build would otherwise fall back to
+# metadata-action's "latest", which uv-dynamic-versioning rejects. BUILD_VERSION
+# is read from the minted version directly rather than metadata-action's
+# arbitrated output.
 on:
   release:
     types: [published]
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 env:
   REGISTRY: ghcr.io
@@ -18,11 +24,18 @@ env:
 
 permissions: {}
 
+# Serialize releases: the version bump reads the tag list and takes max+1, so two
+# runs racing on main would compute the same number. Queue, never cancel —
+# cancelling mid-build could leave a half-published release/tag behind.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  # One-click release: bump to the next year.month.N version, cut a GitHub
+  # On every push to main: bump to the next year.month.N version, cut a GitHub
   # release with auto-generated notes, then fall through to build-and-push.
   release:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     permissions:
@@ -81,8 +94,9 @@ jobs:
 
   build-and-push:
     needs: [release]
-    # Run after a manual release, and also for push/release events where the
-    # release job is skipped (a skipped dependency must not block this job).
+    # Runs after the release job on push, and also on a `release` event
+    # where that job is skipped — always() keeps a skipped dependency from
+    # blocking this job.
     if: >-
       always()
       && needs.release.result != 'failure'
@@ -99,8 +113,8 @@ jobs:
           persist-credentials: false
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name == 'release' || github.event_name == 'workflow_dispatch'
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        if: github.event_name == 'release' || github.event_name == 'push'
         with:
           registry: ${{ env.REGISTRY }}
           username: ewjoachim
@@ -113,15 +127,15 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
             type=semver,pattern={{version}}
-            type=raw,value=${{ needs.release.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' }}
+            type=raw,value=${{ needs.release.outputs.version }},enable=${{ needs.release.outputs.version != '' }}
             type=raw,value=latest,enable={{is_default_branch}}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
-          push: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
+          push: ${{ github.event_name == 'release' || github.event_name == 'push' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           build-args: |
-            BUILD_VERSION=${{ steps.meta.outputs.version || '0.0.0' }}
+            BUILD_VERSION=${{ needs.release.outputs.version || steps.meta.outputs.version || '0.0.0' }}
