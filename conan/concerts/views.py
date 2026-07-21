@@ -28,7 +28,7 @@ from django.views.decorators.http import require_POST
 from . import checklist
 from .models import Concert
 
-META_FIELDS = frozenset(["name", "date", "respo", "mandataire"])
+META_FIELDS = frozenset(["name", "date", "lieu", "respo", "mandataire"])
 
 
 @login_not_required

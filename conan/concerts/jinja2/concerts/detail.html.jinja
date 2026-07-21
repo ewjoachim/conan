@@ -40,6 +40,12 @@
         hx-trigger="input changed delay:800ms" hx-swap="none">
     </div>
     <div class="meta-field full">
+      <span class="meta-label">Lieu</span>
+      <textarea class="meta-textarea" placeholder="Salle, adresse…" name="value"
+        hx-post="{{ url('meta', args=[concert.pk]) }}" hx-vals='{"field": "lieu"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">{{ concert.lieu }}</textarea>
+    </div>
+    <div class="meta-field full">
       <span class="meta-label">Contact mandataire</span>
       <textarea class="meta-textarea" placeholder="Nom, téléphone, email…" name="value"
         hx-post="{{ url('meta', args=[concert.pk]) }}" hx-vals='{"field": "mandataire"}'
