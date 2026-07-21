@@ -90,7 +90,7 @@ STEPS: tuple[Step, ...] = (
     Step(
         id="s0b",
         num="Étape 2",
-        title="Informations Waco",
+        title="Informations Wacos",
         items=(
             Item(id="s0b_1", label="Durée", type="shorttext", placeholder="ex : 1h30"),
             Item(

@@ -202,6 +202,8 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
   .header-top .user-bar{width:100%;}
   .prog-bar{width:80px;}
   .concert-card{flex-wrap:wrap;gap:.5rem;}
+  .concert-info{flex-basis:100%;}
+  .concert-name{white-space:normal;}
   .concert-prog{flex-direction:row;align-items:center;gap:.5rem;}
   .prog-bar{width:80px;}
   .card-actions{opacity:1;}
