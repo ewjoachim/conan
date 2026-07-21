@@ -60,9 +60,8 @@ jobs:
           now = datetime.datetime.now(datetime.timezone.utc)
           prefix = f"{now.year}.{now.month}."
 
-          # Read repo from the environment (never interpolate Actions
-          # expressions into the command) and build argv as a list, so there is
-          # no shell for anything to inject into.
+          # Tag list from the API, not a local `git tag`, so the job needs no
+          # checkout and no history.
           tags = subprocess.run(
               ["gh", "api", "--paginate",
                f"repos/{os.environ['REPO']}/tags", "--jq", ".[].name"],
@@ -86,8 +85,9 @@ jobs:
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-          # Pass the step output through the environment rather than interpolating
-          # ${{ }} straight into the shell, which would be a script-injection vector.
+          # Without this gh resolves the repo from the local git remote, which
+          # doesn't exist in this checkout-free job.
+          GH_REPO: ${{ github.repository }}
           VERSION: ${{ steps.bump.outputs.version }}
         run: |
           gh release create "$VERSION" \
