@@ -45,15 +45,14 @@ jobs:
       version: ${{ steps.bump.outputs.version }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0 # need the full tag list to compute the next version
-          persist-credentials: false
-
+      # No checkout: the tag list comes from the API, so the job needs neither a
+      # working tree nor the full git history a local `git tag` would require.
       - name: Compute next version
         id: bump
         shell: python
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
         run: |
           import datetime, os, re, subprocess
 
@@ -61,8 +60,12 @@ jobs:
           now = datetime.datetime.now(datetime.timezone.utc)
           prefix = f"{now.year}.{now.month}."
 
+          # Read repo from the environment (never interpolate Actions
+          # expressions into the command) and build argv as a list, so there is
+          # no shell for anything to inject into.
           tags = subprocess.run(
-              ["git", "tag", "--list", f"{prefix}*"],
+              ["gh", "api", "--paginate",
+               f"repos/{os.environ['REPO']}/tags", "--jq", ".[].name"],
               capture_output=True, text=True, check=True,
           ).stdout.split()
 
