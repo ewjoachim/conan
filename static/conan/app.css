@@ -32,7 +32,7 @@ body{font-family:'Nunito',sans-serif;background:var(--green-pale);color:var(--in
 .concert-name{font-family:'Josefin Sans',sans-serif;font-weight:700;font-size:1rem;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .concert-meta{font-size:.78rem;color:var(--muted);margin-top:.2rem;}
 .concert-prog{display:flex;flex-direction:column;align-items:flex-end;gap:.35rem;flex-shrink:0;}
-.prog-pct{font-family:'Josefin Sans',sans-serif;font-size:.8rem;font-weight:700;color:var(--green);}
+.prog-pct{font-family:'Josefin Sans',sans-serif;font-size:.8rem;font-weight:700;color:var(--green);min-width:2.8ch;text-align:right;font-variant-numeric:tabular-nums;}
 .prog-bar{width:120px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
 .prog-bar-fill{height:100%;background:var(--green);border-radius:2px;}
 .concert-card.recap-warning{border-color:#c0392b;border-width:2.5px;}
