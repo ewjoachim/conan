@@ -21,14 +21,14 @@
     <a class="btn-archives" href="{{ url('list') }}">← Retour</a>
   </div>
   <div class="concert-list">
-    {% if not concerts %}
+    {% if not cards %}
     <div class="empty-state">
       <div style="font-size:2rem">📦</div>
       <p>Aucun concert archivé.</p>
     </div>
     {% else %}
-    {% for c in concerts %}
-    <a class="concert-card archived" href="{{ url('detail', args=[c.pk]) }}">
+    {% for c in cards %}
+    <a class="concert-card archived" href="{{ c.detail_url }}">
       <div class="concert-info">
         <div class="concert-name">{{ c.name or 'Concert sans nom' }}</div>
         {% set meta = [c.date, c.respo] | select | join(' · ') %}
@@ -41,11 +41,11 @@
         </div>
       </div>
       <div class="card-actions" onclick="event.stopPropagation()">
-        <form method="POST" action="{{ url('unarchive', args=[c.pk]) }}">
+        <form method="POST" action="{{ c.unarchive_url }}">
           {{ csrf_input }}
           <button type="submit" class="btn-archive">Désarchiver</button>
         </form>
-        <form method="POST" action="{{ url('delete', args=[c.pk]) }}">
+        <form method="POST" action="{{ c.delete_url }}">
           {{ csrf_input }}
           <button type="submit" class="btn-delete"
             onclick="return confirm('Supprimer « {{ c.name or 'ce concert' }} » ? Cette action est irréversible.')">

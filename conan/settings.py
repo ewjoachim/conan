@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "conan.accounts",
     "conan.concerts",
+    "conan.concerts_orga",
 ]
 
 MIDDLEWARE = [
