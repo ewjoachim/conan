@@ -122,13 +122,17 @@
           hx-target="{{ yn_target }}" hx-swap="outerHTML">Non</button>
       </div>
     </div>
+    {% if item.hint %}<div class="yesno-hint">{{ item.hint | safe }}</div>{% endif %}
   </div>
   {% if yn == 'y' %}
     <div class="sub-items{% if item.indent %} sub-items-indent{% endif %}">
       {% for sub in item.leading_subs %}
         <div class="sub-item">
           <div class="sub-check {% if state.get(sub.id) %}checked{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}></div>
-          <span class="sub-label {% if state.get(sub.id) %}done{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}>{{ sub.label }}</span>
+          <div style="flex:1;min-width:0">
+            <span class="sub-label {% if state.get(sub.id) %}done{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}>{{ sub.label }}</span>
+            {% if sub.hint %}<div class="item-hint">{{ sub.hint | safe }}</div>{% endif %}
+          </div>
         </div>
       {% endfor %}
       {% if item.note_key %}
@@ -160,7 +164,10 @@
       {% for sub in item.subs %}
         <div class="sub-item">
           <div class="sub-check {% if state.get(sub.id) %}checked{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}></div>
-          <span class="sub-label {% if state.get(sub.id) %}done{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}>{{ sub.label }}</span>
+          <div style="flex:1;min-width:0">
+            <span class="sub-label {% if state.get(sub.id) %}done{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}>{{ sub.label }}</span>
+            {% if sub.hint %}<div class="item-hint">{{ sub.hint | safe }}</div>{% endif %}
+          </div>
           {% if sub.note_inline and sub.note_key %}
             <input class="shorttext-input" style="flex:1;max-width:160px;margin-left:.5rem" type="text"
               value="{{ state.get(sub.note_key, '') }}" placeholder="{{ sub.note_placeholder }}" name="text"
@@ -179,27 +186,54 @@
       {# Intervenants dynamic list when yn=y on ssc_intervenants #}
       {% if item.id == 'ssc_intervenants' %}
         {% set intervenants = state.get('o_intervenants', []) %}
-        {% for interv in intervenants %}
-        <div class="repet-row">
-          <input class="repet-lieu" style="flex:1" type="text" placeholder="Nom" value="{{ interv.nom or '' }}" name="nom"
-            hx-post="{{ url('o_intervenant_update', args=[concert.pk, loop.index0]) }}"
-            hx-trigger="input changed delay:800ms" hx-swap="none">
-          <input class="repet-lieu" style="flex:2" type="text" placeholder="Contact" value="{{ interv.contact or '' }}" name="contact"
-            hx-post="{{ url('o_intervenant_update', args=[concert.pk, loop.index0]) }}"
-            hx-trigger="input changed delay:800ms" hx-swap="none">
-          <button class="repet-del"
-            hx-post="{{ url('o_intervenant_delete', args=[concert.pk, loop.index0]) }}"
+        <div class="extras-list">
+          {% for interv in intervenants %}
+          <div class="repet-row">
+            <input class="repet-lieu" style="flex:1" type="text" placeholder="Nom" value="{{ interv.nom or '' }}" name="nom"
+              hx-post="{{ url('o_intervenant_update', args=[concert.pk, loop.index0]) }}"
+              hx-trigger="input changed delay:800ms" hx-swap="none">
+            <input class="repet-lieu" style="flex:2" type="text" placeholder="Contact" value="{{ interv.contact or '' }}" name="contact"
+              hx-post="{{ url('o_intervenant_update', args=[concert.pk, loop.index0]) }}"
+              hx-trigger="input changed delay:800ms" hx-swap="none">
+            <button class="repet-del"
+              hx-post="{{ url('o_intervenant_delete', args=[concert.pk, loop.index0]) }}"
+              hx-vals='{"step": "{{ step.id }}"}'
+              hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+          </div>
+          {% endfor %}
+          <button class="repet-add"
+            hx-post="{{ url('o_intervenant_add', args=[concert.pk]) }}"
             hx-vals='{"step": "{{ step.id }}"}'
-            hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+            hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Ajouter un intervenant</button>
         </div>
-        {% endfor %}
-        <button class="repet-add" style="margin:.35rem 1rem"
-          hx-post="{{ url('o_intervenant_add', args=[concert.pk]) }}"
-          hx-vals='{"step": "{{ step.id }}"}'
-          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Ajouter un intervenant</button>
       {% endif %}
     </div>
   {% endif %}
+
+{% elif item.type == 'extras' %}
+  {% set extras = state.get('extras', []) %}
+  <div class="extras-list">
+    {% for extra in extras %}
+    <div class="extra-row">
+      <div class="extra-check {% if extra.done %}checked{% endif %}"
+        hx-post="{{ url('o_extra_toggle', args=[concert.pk, loop.index0]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML"></div>
+      <input class="extra-desc {% if extra.done %}done{% endif %}" type="text"
+        placeholder="Description…" value="{{ extra.desc or '' }}" name="desc"
+        hx-post="{{ url('o_extra_update', args=[concert.pk, loop.index0]) }}"
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+      <button class="repet-del"
+        hx-post="{{ url('o_extra_delete', args=[concert.pk, loop.index0]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+    </div>
+    {% endfor %}
+    <button class="repet-add"
+      hx-post="{{ url('o_extra_add', args=[concert.pk]) }}"
+      hx-vals='{"step": "{{ step.id }}"}'
+      hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Ajouter</button>
+  </div>
 
 {% else %}
   {# simple #}
