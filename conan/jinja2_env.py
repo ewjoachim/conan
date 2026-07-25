@@ -13,6 +13,7 @@ from jinja2 import Environment
 
 from conan._version import __version__ as conan_version
 from conan.concerts import checklist
+from conan.concerts_orga import checklist_orga
 
 
 def environment(**options: Any) -> Environment:
@@ -34,4 +35,7 @@ def environment(**options: Any) -> Environment:
     g["is_step_done"] = checklist.is_step_done
     g["is_cotech_done"] = checklist.is_cotech_done
     g["COTECH_OPTIONS"] = checklist.COTECH_OPTIONS
+    g["orga_is_step_done"] = checklist_orga.is_step_done
+    g["orga_is_cotech_done"] = checklist_orga.is_cotech_done
+    g["ORGA_COTECH_OPTIONS"] = checklist_orga.COTECH_OPTIONS_ORGA
     return env

@@ -1,0 +1,4 @@
+<div class="header-prog" id="header-prog"{% if oob %} hx-swap-oob="true"{% endif %}>
+  <div class="prog-track"><div class="prog-fill" style="width:{{ progress.pct }}%"></div></div>
+  <span class="prog-text">{{ progress.done }} / {{ progress.total }}</span>
+</div>

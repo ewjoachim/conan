@@ -1,0 +1,7 @@
+<div class="steps" id="all-steps">
+  {% for step in steps %}
+    {% if not step.conditional_key or state.get('yn_' + step.conditional_key) == 'y' %}
+      {% include "concerts_orga/partials/step.html.jinja" %}
+    {% endif %}
+  {% endfor %}
+</div>

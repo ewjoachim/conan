@@ -1,0 +1,218 @@
+{% from "concerts_orga/partials/macros.html.jinja" import toggle_attrs %}
+
+{% if item.type == 'textfield' %}
+  <div class="item">
+    <div class="item-content">
+      <div class="item-label">{{ item.label }}</div>
+      <div class="text-field-wrap">
+        <textarea class="text-field-area" placeholder="{{ item.placeholder }}" name="text"
+          hx-post="{{ url('o_field', args=[concert.pk]) }}" hx-vals='{"key": "tft_{{ item.id }}"}'
+          hx-trigger="input changed delay:800ms" hx-swap="none">{{ state.get('tft_' + item.id, '') }}</textarea>
+        <div class="text-field-done-row">
+          <div class="check-wrap" {{ toggle_attrs(concert.pk, 'tf_' + item.id, step.id) | safe }}>
+            <div class="check-box {% if state.get('tf_' + item.id) %}checked{% endif %}"></div>
+          </div>
+          <span class="text-field-done-label {% if state.get('tf_' + item.id) %}done{% endif %}"
+            {{ toggle_attrs(concert.pk, 'tf_' + item.id, step.id) | safe }}>Transmis</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+{% elif item.type == 'cotech' %}
+  {% set mode = state.get('cotech_mode') %}
+  <div class="yesno-item">
+    <div style="margin-bottom:.35rem">
+      <span class="yesno-label">CoTech au courant</span>
+      <div class="yesno-hint">Via #Conantech</div>
+    </div>
+    <div class="yesno-btns" style="margin-top:.5rem">
+      {% for val, label in ORGA_COTECH_OPTIONS %}
+        <button class="yn-btn {% if mode == val %}{{ 'active-yes' if val == 'passage' else 'active-neutral' }}{% endif %}"
+          hx-post="{{ url('o_cotech_mode', args=[concert.pk]) }}"
+          hx-vals='{"mode": "{{ val }}", "step": "{{ step.id }}"}'
+          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">{{ label }}</button>
+      {% endfor %}
+    </div>
+  </div>
+  {% if mode == 'passage' %}
+    <div class="sub-items">
+      <div style="padding:.75rem 1rem">
+        <div style="font-size:.83rem;font-weight:600;color:var(--ink);margin-bottom:.3rem">Éléments demandés par CoTech</div>
+        <div class="yesno-hint" style="margin-bottom:.5rem">Inscrire les questions de CoTech, rajouter les réponses quand on les a.</div>
+        <textarea class="text-field-area" placeholder="Questions et réponses…" name="text"
+          hx-post="{{ url('o_field', args=[concert.pk]) }}" hx-vals='{"key": "cotech_text"}'
+          hx-trigger="input changed delay:800ms" hx-swap="none">{{ state.get('cotech_text', '') }}</textarea>
+        <div class="text-field-done-row">
+          <div class="check-wrap" {{ toggle_attrs(concert.pk, 'cotech_transmis', step.id) | safe }}>
+            <div class="check-box {% if state.get('cotech_transmis') %}checked{% endif %}"></div>
+          </div>
+          <span class="text-field-done-label {% if state.get('cotech_transmis') %}done{% endif %}"
+            {{ toggle_attrs(concert.pk, 'cotech_transmis', step.id) | safe }}>Transmis</span>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
+{% elif item.type == 'collabs_list' %}
+  {% set collabs = state.get('o_collabs', []) %}
+  <div class="extras-list">
+    {% for collab in collabs %}
+    <div style="display:flex;gap:.5rem;padding:.35rem 1rem;align-items:center">
+      <input class="shorttext-input" style="flex:2" type="text" placeholder="Nom du groupe" value="{{ collab.nom or '' }}" name="nom"
+        hx-post="{{ url('o_collab_update', args=[concert.pk, loop.index0]) }}"
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+      <input class="shorttext-input" style="width:64px;text-align:center" type="number" min="0" placeholder="♪" value="{{ collab.nb_chantants or '' }}" name="nb_chantants"
+        hx-post="{{ url('o_collab_update', args=[concert.pk, loop.index0]) }}"
+        hx-trigger="input changed delay:800ms" hx-swap="none" title="Nb chantants">
+      <input class="shorttext-input" style="width:64px;text-align:center" type="number" min="0" placeholder="☆" value="{{ collab.nb_non_chantants or '' }}" name="nb_non_chantants"
+        hx-post="{{ url('o_collab_update', args=[concert.pk, loop.index0]) }}"
+        hx-trigger="input changed delay:800ms" hx-swap="none" title="Nb non-chantants">
+      <button class="repet-del"
+        hx-post="{{ url('o_collab_delete', args=[concert.pk, loop.index0]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+    </div>
+    {% endfor %}
+    <button class="repet-add"
+      hx-post="{{ url('o_collab_add', args=[concert.pk]) }}"
+      hx-vals='{"step": "{{ step.id }}"}'
+      hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Ajouter un groupe</button>
+    <div class="collab-legend"><span>♪ = chantants</span><span>☆ = non-chantants</span></div>
+  </div>
+
+{% elif item.type == 'orga_repets' %}
+  {% set repets = state.get('o_repets', []) %}
+  <div class="extras-list">
+    {% for repet in repets %}
+    <div class="repet-row">
+      <span class="repet-num">Répét {{ loop.index }}</span>
+      <input class="repet-date" type="date" value="{{ repet.date or '' }}" name="date"
+        hx-post="{{ url('o_orepet_update', args=[concert.pk, loop.index0]) }}"
+        hx-trigger="change" hx-swap="none">
+      <input class="repet-lieu" type="text" placeholder="Lieu" value="{{ repet.lieu or '' }}" name="lieu"
+        hx-post="{{ url('o_orepet_update', args=[concert.pk, loop.index0]) }}"
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+      <button class="repet-del"
+        hx-post="{{ url('o_orepet_delete', args=[concert.pk, loop.index0]) }}"
+        hx-vals='{"step": "{{ step.id }}"}'
+        hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+    </div>
+    {% endfor %}
+    <button class="repet-add"
+      hx-post="{{ url('o_orepet_add', args=[concert.pk]) }}"
+      hx-vals='{"step": "{{ step.id }}"}'
+      hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Répétition</button>
+  </div>
+
+{% elif item.type == 'yesno' %}
+  {% set yn = state.get('yn_' + item.id) %}
+  {% set yn_target = '#all-steps' if item.id in ('sg_collab', 'sg_scenario') else '#step_' + step.id %}
+  <div class="yesno-item{% if item.indent %} yesno-indent{% endif %}">
+    <div class="yesno-row">
+      <span class="yesno-label">{{ item.label }}</span>
+      <div class="yesno-btns">
+        <button class="yn-btn {% if yn == 'y' %}active-yes{% endif %}"
+          hx-post="{{ url('o_yesno', args=[concert.pk]) }}"
+          hx-vals='{"item_id": "{{ item.id }}", "val": "y", "step": "{{ step.id }}"}'
+          hx-target="{{ yn_target }}" hx-swap="outerHTML">Oui</button>
+        <button class="yn-btn {% if yn == 'n' %}active-neutral{% endif %}"
+          hx-post="{{ url('o_yesno', args=[concert.pk]) }}"
+          hx-vals='{"item_id": "{{ item.id }}", "val": "n", "step": "{{ step.id }}"}'
+          hx-target="{{ yn_target }}" hx-swap="outerHTML">Non</button>
+      </div>
+    </div>
+  </div>
+  {% if yn == 'y' %}
+    <div class="sub-items{% if item.indent %} sub-items-indent{% endif %}">
+      {% for sub in item.leading_subs %}
+        <div class="sub-item">
+          <div class="sub-check {% if state.get(sub.id) %}checked{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}></div>
+          <span class="sub-label {% if state.get(sub.id) %}done{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}>{{ sub.label }}</span>
+        </div>
+      {% endfor %}
+      {% if item.note_key %}
+        <div style="padding:.5rem 1rem .25rem">
+          <textarea class="text-field-area" placeholder="{{ item.note_placeholder }}" name="text"
+            hx-post="{{ url('o_field', args=[concert.pk]) }}" hx-vals='{"key": "{{ item.note_key }}"}'
+            hx-trigger="input changed delay:800ms" hx-swap="none">{{ state.get(item.note_key, '') }}</textarea>
+        </div>
+      {% endif %}
+      {% if item.extra_notes %}
+        <div style="padding:.5rem 1rem .1rem">
+          {% set note_key, note_placeholder = item.extra_notes[0] %}
+          <input class="shorttext-input" style="width:100%;box-sizing:border-box" type="text"
+            value="{{ state.get(note_key, '') }}" placeholder="{{ note_placeholder }}" name="text"
+            hx-post="{{ url('o_field', args=[concert.pk]) }}" hx-vals='{"key": "{{ note_key }}"}'
+            hx-trigger="input changed delay:800ms" hx-swap="none">
+        </div>
+        {% if item.extra_notes|length > 1 %}
+        <div style="display:flex;flex-wrap:wrap;gap:.5rem;padding:.25rem 1rem .25rem">
+          {% for note_key, note_placeholder in item.extra_notes[1:] %}
+          <input class="shorttext-input" type="text"
+            value="{{ state.get(note_key, '') }}" placeholder="{{ note_placeholder }}" name="text"
+            hx-post="{{ url('o_field', args=[concert.pk]) }}" hx-vals='{"key": "{{ note_key }}"}'
+            hx-trigger="input changed delay:800ms" hx-swap="none">
+          {% endfor %}
+        </div>
+        {% endif %}
+      {% endif %}
+      {% for sub in item.subs %}
+        <div class="sub-item">
+          <div class="sub-check {% if state.get(sub.id) %}checked{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}></div>
+          <span class="sub-label {% if state.get(sub.id) %}done{% endif %}" {{ toggle_attrs(concert.pk, sub.id, step.id) | safe }}>{{ sub.label }}</span>
+          {% if sub.note_inline and sub.note_key %}
+            <input class="shorttext-input" style="flex:1;max-width:160px;margin-left:.5rem" type="text"
+              value="{{ state.get(sub.note_key, '') }}" placeholder="{{ sub.note_placeholder }}" name="text"
+              hx-post="{{ url('o_field', args=[concert.pk]) }}" hx-vals='{"key": "{{ sub.note_key }}"}'
+              hx-trigger="input changed delay:800ms" hx-swap="none">
+          {% elif sub.note_key %}
+            <div style="padding:.25rem 1rem .25rem 2.5rem">
+              <input class="shorttext-input" style="width:100%" type="text"
+                value="{{ state.get(sub.note_key, '') }}" placeholder="{{ sub.note_placeholder }}" name="text"
+                hx-post="{{ url('o_field', args=[concert.pk]) }}" hx-vals='{"key": "{{ sub.note_key }}"}'
+                hx-trigger="input changed delay:800ms" hx-swap="none">
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      {# Intervenants dynamic list when yn=y on ssc_intervenants #}
+      {% if item.id == 'ssc_intervenants' %}
+        {% set intervenants = state.get('o_intervenants', []) %}
+        {% for interv in intervenants %}
+        <div class="repet-row">
+          <input class="repet-lieu" style="flex:1" type="text" placeholder="Nom" value="{{ interv.nom or '' }}" name="nom"
+            hx-post="{{ url('o_intervenant_update', args=[concert.pk, loop.index0]) }}"
+            hx-trigger="input changed delay:800ms" hx-swap="none">
+          <input class="repet-lieu" style="flex:2" type="text" placeholder="Contact" value="{{ interv.contact or '' }}" name="contact"
+            hx-post="{{ url('o_intervenant_update', args=[concert.pk, loop.index0]) }}"
+            hx-trigger="input changed delay:800ms" hx-swap="none">
+          <button class="repet-del"
+            hx-post="{{ url('o_intervenant_delete', args=[concert.pk, loop.index0]) }}"
+            hx-vals='{"step": "{{ step.id }}"}'
+            hx-target="#step_{{ step.id }}" hx-swap="outerHTML">✕</button>
+        </div>
+        {% endfor %}
+        <button class="repet-add" style="margin:.35rem 1rem"
+          hx-post="{{ url('o_intervenant_add', args=[concert.pk]) }}"
+          hx-vals='{"step": "{{ step.id }}"}'
+          hx-target="#step_{{ step.id }}" hx-swap="outerHTML">+ Ajouter un intervenant</button>
+      {% endif %}
+    </div>
+  {% endif %}
+
+{% else %}
+  {# simple #}
+  <div class="item">
+    <div class="item-row">
+      <div class="check-wrap" {{ toggle_attrs(concert.pk, item.id, step.id) | safe }}>
+        <div class="check-box {% if state.get(item.id) %}checked{% endif %}"></div>
+      </div>
+      <div class="item-content">
+        <div class="item-label {% if state.get(item.id) %}done{% endif %}"
+          {{ toggle_attrs(concert.pk, item.id, step.id) | safe }} style="cursor:pointer">{{ item.label }}</div>
+        {% if item.hint %}<div class="item-hint">{{ item.hint | safe }}</div>{% endif %}
+      </div>
+    </div>
+  </div>
+{% endif %}

@@ -1,0 +1,3 @@
+{% macro toggle_attrs(pk, key, step_id) -%}
+hx-post="{{ url('o_toggle', args=[pk]) }}" hx-vals='{"key": "{{ key }}", "step": "{{ step_id }}"}' hx-target="#step_{{ step_id }}" hx-swap="outerHTML"
+{%- endmacro %}

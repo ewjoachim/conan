@@ -20,18 +20,18 @@
     <span class="section-title">{{ count }} concert{{ 's' if count > 1 else '' }}</span>
     <div class="top-bar-actions">
       <a class="btn-archives" href="{{ url('archives') }}">Archives</a>
-      <button class="btn-new" onclick="document.getElementById('modal').classList.add('open')">+ Nouveau concert</button>
+      <button class="btn-new" onclick="document.getElementById('modal-choice').classList.add('open')">+ Nouveau concert</button>
     </div>
   </div>
   <div class="concert-list">
-    {% if not concerts %}
+    {% if not cards %}
     <div class="empty-state">
       <div style="font-size:2rem">🎵</div>
       <p>Aucun concert actif pour l'instant.<br>Crées en un !</p>
     </div>
     {% else %}
-    {% for c in concerts %}
-    <a class="concert-card{% if c.pk in recap_warnings %} recap-warning{% endif %}" href="{{ url('detail', args=[c.pk]) }}">
+    {% for c in cards %}
+    <a class="concert-card{% if c.recap_warning %} recap-warning{% endif %}" href="{{ c.detail_url }}">
       <div class="concert-info">
         <div class="concert-name">{{ c.name or 'Concert sans nom' }}</div>
         {% set meta = [c.date, c.respo] | select | join(' · ') %}
@@ -44,11 +44,11 @@
         </div>
       </div>
       <div class="card-actions" onclick="event.stopPropagation()">
-        <form method="POST" action="{{ url('archive', args=[c.pk]) }}">
+        <form method="POST" action="{{ c.archive_url }}">
           {{ csrf_input }}
           <button type="submit" class="btn-archive">Archiver</button>
         </form>
-        <form method="POST" action="{{ url('delete', args=[c.pk]) }}">
+        <form method="POST" action="{{ c.delete_url }}">
           {{ csrf_input }}
           <button type="submit" class="btn-delete"
             onclick="return confirm('Supprimer « {{ c.name or 'ce concert' }} » ? Cette action est irréversible.')">
@@ -62,9 +62,30 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="modal" onclick="if(event.target===this)this.classList.remove('open')">
+<div class="modal-overlay" id="modal-choice" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
     <h2>Nouveau concert</h2>
+    <p class="modal-choice-hint">Quel type de concert ?</p>
+    <div class="modal-choice-cards">
+      <button type="button" class="modal-choice-card"
+        onclick="document.getElementById('modal-choice').classList.remove('open');document.getElementById('modal-classic').classList.add('open')">
+        <span class="modal-choice-title">Concert au format classique</span>
+      </button>
+      <button type="button" class="modal-choice-card"
+        onclick="document.getElementById('modal-choice').classList.remove('open');document.getElementById('modal-orga').classList.add('open')">
+        <span class="modal-choice-title">Concert orga full Negi</span>
+      </button>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn-cancel"
+        onclick="document.getElementById('modal-choice').classList.remove('open')">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-classic" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <h2>Nouveau concert classique</h2>
     <form method="POST" action="{{ url('create') }}">
       {{ csrf_input }}
       <div class="form-field">
@@ -82,7 +103,34 @@
       </div>
       <div class="modal-actions">
         <button type="button" class="btn-cancel"
-          onclick="document.getElementById('modal').classList.remove('open')">Annuler</button>
+          onclick="document.getElementById('modal-classic').classList.remove('open')">Annuler</button>
+        <button type="submit" class="btn-create">Créer →</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-orga" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <h2>Nouveau concert orga full Negi</h2>
+    <form method="POST" action="{{ url('o_create') }}">
+      {{ csrf_input }}
+      <div class="form-field">
+        <label class="form-label" for="orga-name">Nom du concert</label>
+        <input class="form-input" type="text" id="orga-name" name="name" placeholder="Ex : Jonetachi 2025" required
+          autofocus>
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="orga-date">Date</label>
+        <input class="form-input" type="date" id="orga-date" name="date">
+      </div>
+      <div class="form-field">
+        <label class="form-label" for="orga-respo">Respo Negi</label>
+        <input class="form-input" type="text" id="orga-respo" name="respo" placeholder="Prénom">
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel"
+          onclick="document.getElementById('modal-orga').classList.remove('open')">Annuler</button>
         <button type="submit" class="btn-create">Créer →</button>
       </div>
     </form>

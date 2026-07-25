@@ -13,6 +13,8 @@ silent (HTTP 204) so the user's textarea keeps focus while typing.
 # login_not_required exists since Django 5.1 (our floor is 5.2); the django-types
 # stubs lag behind, so silence ty's import error here.
 import datetime
+import itertools
+from dataclasses import dataclass
 from typing import Any
 
 from django.contrib.auth.decorators import (
@@ -23,7 +25,10 @@ from django.db import connection, models, transaction
 from django.http import HttpRequest, HttpResponse, HttpResponseBadRequest
 from django.shortcuts import get_object_or_404, redirect
 from django.template.loader import render_to_string
+from django.urls import reverse
 from django.views.decorators.http import require_POST
+
+from conan.concerts_orga.models import OrgaConcert
 
 from . import checklist
 from .models import Concert
@@ -44,34 +49,93 @@ def healthz(request: HttpRequest) -> HttpResponse:
     return HttpResponse("ok", content_type="text/plain")
 
 
-def concert_list(request: HttpRequest) -> HttpResponse:
-    concerts = Concert.objects.filter(archived=False).order_by(
-        models.F("date").asc(nulls_last=True), "created_at"
-    )
+@dataclass(frozen=True)
+class ConcertCard:
+    """A concert, classic or orga, as shown on the unified list/archives pages."""
+
+    pk: int
+    name: str
+    date: datetime.date | None
+    respo: str
+    progress: int
+    kind: str  # "classic" | "orga"
+    sort_key: tuple[Any, ...]
+    detail_url: str
+    archive_url: str
+    unarchive_url: str
+    delete_url: str
+    recap_warning: bool = False
+
+
+def _classic_cards(concerts: models.QuerySet[Concert]) -> list[ConcertCard]:
     today = datetime.datetime.now(tz=datetime.UTC).date()
     warn_before = today + datetime.timedelta(days=5)
-    recap_warnings: set[int] = {
-        c.pk
+    return [
+        ConcertCard(
+            pk=c.pk,
+            name=c.name,
+            date=c.date,
+            respo=c.respo,
+            progress=c.progress,
+            kind="classic",
+            sort_key=(c.date is None, c.date, c.created_at),
+            detail_url=reverse("detail", args=[c.pk]),
+            archive_url=reverse("archive", args=[c.pk]),
+            unarchive_url=reverse("unarchive", args=[c.pk]),
+            delete_url=reverse("delete", args=[c.pk]),
+            recap_warning=bool(
+                c.date and c.date <= warn_before and not c.state.get("s4_1")
+            ),
+        )
         for c in concerts
-        if c.date and c.date <= warn_before and not c.state.get("s4_1")
-    }
+    ]
+
+
+def _orga_cards(concerts: models.QuerySet[OrgaConcert]) -> list[ConcertCard]:
+    return [
+        ConcertCard(
+            pk=c.pk,
+            name=c.name,
+            date=c.date,
+            respo=c.respo,
+            progress=c.progress,
+            kind="orga",
+            sort_key=(c.date is None, c.date, c.created_at),
+            detail_url=reverse("o_detail", args=[c.pk]),
+            archive_url=reverse("o_archive", args=[c.pk]),
+            unarchive_url=reverse("o_unarchive", args=[c.pk]),
+            delete_url=reverse("o_delete", args=[c.pk]),
+        )
+        for c in concerts
+    ]
+
+
+def concert_list(request: HttpRequest) -> HttpResponse:
+    classic = Concert.objects.filter(archived=False)
+    orga = OrgaConcert.objects.filter(archived=False)
+    cards = sorted(
+        itertools.chain(_classic_cards(classic), _orga_cards(orga)),
+        key=lambda card: card.sort_key,
+    )
     html = render_to_string(
         "concerts/list.html.jinja",
-        {
-            "concerts": concerts,
-            "count": concerts.count(),
-            "recap_warnings": recap_warnings,
-        },
+        {"cards": cards, "count": len(cards)},
         request,
     )
     return HttpResponse(html)
 
 
 def concert_archives(request: HttpRequest) -> HttpResponse:
-    concerts = Concert.objects.filter(archived=True)
+    classic = Concert.objects.filter(archived=True)
+    orga = OrgaConcert.objects.filter(archived=True)
+    cards = sorted(
+        itertools.chain(_classic_cards(classic), _orga_cards(orga)),
+        key=lambda card: card.date or datetime.date.min,
+        reverse=True,
+    )
     html = render_to_string(
         "concerts/archives.html.jinja",
-        {"concerts": concerts, "count": concerts.count()},
+        {"cards": cards, "count": len(cards)},
         request,
     )
     return HttpResponse(html)
