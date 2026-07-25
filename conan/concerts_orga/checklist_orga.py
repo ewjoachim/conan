@@ -10,6 +10,7 @@ State = dict[str, StateValue]
 class Sub:
     id: str
     label: str
+    hint: str = ""
     note_key: str = ""
     note_placeholder: str = ""
     note_inline: bool = False  # render note input on the same line as the sub
@@ -59,14 +60,27 @@ STEPS: tuple[Step, ...] = (
         title="Généralités",
         items=(
             Item(id="sg_collab", label="Collab ?", type="yesno"),
-            Item(id="sg_scenario", label="Concert à scénario ?", type="yesno"),
+            Item(
+                id="sg_scenario",
+                label="Concert à scénario ?",
+                type="yesno",
+                hint="Est-ce que le concert va passer par une phase d'écriture avec des impacts sur la PL...",
+            ),
             Item(
                 id="sl_payant",
                 label="Concert payant ?",
                 type="yesno",
                 subs=(
-                    Sub(id="sl_payant_tarifs", label="Tarifs décidés"),
-                    Sub(id="sl_payant_billetterie", label="Billetterie créée"),
+                    Sub(
+                        id="sl_payant_tarifs",
+                        label="Tarifs décidés",
+                        hint="Voir avec le trésorier",
+                    ),
+                    Sub(
+                        id="sl_payant_billetterie",
+                        label="Billetterie créée",
+                        hint="Vérifier avec le Bureau",
+                    ),
                 ),
             ),
         ),
@@ -127,10 +141,12 @@ STEPS: tuple[Step, ...] = (
                     Sub(
                         id="sc_hebergement_a",
                         label="Coordination avec la personne qui s'en occupe",
+                        hint="Identifier le bon interlocuteur et voir qui s'occupe de quoi",
                     ),
                     Sub(
                         id="sc_hebergement_b",
                         label="Hébergement communiqué aux groupes concernés",
+                        hint="Tout le monde sait où il dort et c'est plus à nous de gérer !",
                     ),
                 ),
             ),
@@ -141,17 +157,33 @@ STEPS: tuple[Step, ...] = (
         num="Bloc 4",
         title="Salle et Admin",
         items=(
-            Item(id="ss_coordination", label="Coordination pour chercher la salle"),
+            Item(
+                id="ss_coordination",
+                label="Coordination pour chercher la salle",
+                hint="Identifier le(s) bonne(s) personne(s) avec qui partager le boulot",
+            ),
             Item(
                 id="ss_trouvee",
                 label="Salle trouvée",
-                hint="N'oubliez pas de remplir le lieu dans l'en-tête !",
+                hint="On peut remplir le lieu dans l'en-tête \\o/",
             ),
-            Item(id="ss_devis_recu", label="Devis reçu"),
+            Item(
+                id="ss_devis_recu",
+                label="Devis reçu",
+                hint="On a reçu la proposition tarifaire de la salle",
+            ),
             Item(id="ss_devis_transmis", label="Devis transmis au trésorier"),
             Item(id="ss_devis_signe", label="Devis signé renvoyé"),
-            Item(id="ss_contrat_recu", label="Contrat reçu"),
-            Item(id="ss_contrat_complete", label="Contrat complété"),
+            Item(
+                id="ss_contrat_recu",
+                label="Contrat reçu",
+                hint="Ça peut être un contrat, des CGU, une convention...",
+            ),
+            Item(
+                id="ss_contrat_complete",
+                label="Contrat complété",
+                hint="Souvent avec le nom du groupe, le nombre de personnes, la sonorisation...",
+            ),
             Item(id="ss_contrat_transmis", label="Contrat transmis au bureau"),
             Item(id="ss_contrat_signe", label="Contrat signé renvoyé"),
         ),
@@ -166,12 +198,17 @@ STEPS: tuple[Step, ...] = (
             Item(
                 id="sd_dates_envoyees",
                 label="Dates possibles envoyées à la salle... ou inversement",
+                hint="Ça va sans doute être un ping pong avant qu'on arrive à trouver une date commune",
             ),
-            Item(id="sd_date_ok", label="Date choisie"),
+            Item(
+                id="sd_date_ok",
+                label="Date choisie",
+                hint="On peut remplir la date dans l'en-tête \\o/",
+            ),
             Item(
                 id="sap_maj_negiagenda",
                 label="MAJ NegiAgenda",
-                hint='Supprimer l\'évènement ou enlever son "?"',
+                hint='Enlever les dates caduques, enlever le "?" de la bonne date',
             ),
         ),
     ),
@@ -180,10 +217,15 @@ STEPS: tuple[Step, ...] = (
         num="Bloc 6",
         title="Discord & Moodle",
         items=(
-            Item(id="sg_discord", label="Création du chan Discord du concert"),
+            Item(
+                id="sg_discord",
+                label="Création du chan Discord du concert",
+                hint="Demander à Vincent",
+            ),
             Item(
                 id="sm_discord_orga",
                 label="Création du chan Discord d'orga du concert",
+                hint="Demander de nouveau à Vincent",
             ),
             Item(
                 id="sm_cours",
@@ -216,17 +258,42 @@ STEPS: tuple[Step, ...] = (
         title="Scénario",
         conditional_key="sg_scenario",
         items=(
-            Item(id="ssc_equipe", label="Team Écriture constituée"),
+            Item(
+                id="ssc_equipe",
+                label="Team Écriture constituée",
+                hint="À voir si auto_role ou autre chose",
+            ),
             Item(id="ssc_valide", label="Scénario écrit"),
             Item(id="ssc_pl", label="PL prête à être validée"),
-            Item(id="ssc_intervenants", label="Intervenants externes ?", type="yesno"),
+            Item(
+                id="ssc_intervenants",
+                label="Intervenants externes ?",
+                type="yesno",
+                hint="Est-ce qu'on fait intervenir une voix off ? des comédiens ? autre chose 🤯?",
+            ),
             Item(
                 id="ssc_livret",
                 label="Livret ?",
                 type="yesno",
                 subs=(
-                    Sub(id="ssc_livret_a", label="Informations rassemblées"),
-                    Sub(id="ssc_livret_b", label="Mise en page"),
+                    Sub(
+                        id="ssc_livret_a",
+                        label="Informations rassemblées",
+                        hint=(
+                            "La liste des chansons, les compositeur.ices, "
+                            "interprètes, arrangeur.euse.... est accessible et "
+                            "complète dans un Gdoc"
+                        ),
+                    ),
+                    Sub(
+                        id="ssc_livret_b",
+                        label="Mise en page",
+                        hint=(
+                            "Le livret est mis en page proprement et les "
+                            "illustrations sont placées, le tout en suivant les "
+                            "modèles de l'imprimeur."
+                        ),
+                    ),
                     Sub(id="ssc_livret_c", label="Envoyé à l'impression"),
                     Sub(
                         id="ssc_livret_d",
@@ -237,7 +304,15 @@ STEPS: tuple[Step, ...] = (
                     ),
                 ),
             ),
-            Item(id="ssc_plan_feu", label="Plan feu"),
+            Item(
+                id="ssc_plan_feu",
+                label="Plan feu",
+                hint=(
+                    "Un document qui reprend les chansons, déplacements et "
+                    "lumière souhaitées, le plus d'informations possibles pour "
+                    "le régisseur"
+                ),
+            ),
             Item(id="ssc_transmis", label="Scénario transmis à tout le monde"),
         ),
     ),
@@ -303,9 +378,22 @@ STEPS: tuple[Step, ...] = (
                 id="sl_catering",
                 label="Catering ?",
                 type="yesno",
+                hint="Est-ce qu'on doit s'occuper de fournir à manger/boire à un moment de l'organisation ?",
                 subs=(
-                    Sub(id="sl_catering_a", label="Doc de choix envoyé avec deadline"),
-                    Sub(id="sl_catering_b", label="Relance faite"),
+                    Sub(
+                        id="sl_catering_a",
+                        label="Doc de choix envoyé avec deadline",
+                        hint=(
+                            "Création d'un document dans lequel chaque "
+                            "participant.e pourra faire son choix si choix il y "
+                            "a. Indiquer une <strong>deadline</strong>"
+                        ),
+                    ),
+                    Sub(
+                        id="sl_catering_b",
+                        label="Relance faite",
+                        hint="On est gentils, on fait <strong>une</strong> relance",
+                    ),
                     Sub(
                         id="sl_catering_c",
                         label="Choix validés et fermeture du fichier",
@@ -317,8 +405,19 @@ STEPS: tuple[Step, ...] = (
                 label="Resto à organiser ?",
                 type="yesno",
                 leading_subs=(
-                    Sub(id="sl_resto_sondage_envoye", label="Sondage envoyé"),
-                    Sub(id="sl_resto_sondage_depile", label="Sondage dépilé"),
+                    Sub(
+                        id="sl_resto_sondage_envoye",
+                        label="Sondage envoyé",
+                        hint=(
+                            "Préciser le resto et si possible envoyer la carte "
+                            "pour savoir qui veut participer"
+                        ),
+                    ),
+                    Sub(
+                        id="sl_resto_sondage_depile",
+                        label="Sondage dépilé",
+                        hint="Est-ce que ça vaut la peine d'organiser pour tout le monde ?",
+                    ),
                 ),
                 extra_notes=(
                     ("st_sl_resto_nom", "Nom du resto…"),
@@ -337,6 +436,12 @@ STEPS: tuple[Step, ...] = (
                     Sub(
                         id="sl_commande_sondage",
                         label="Choix et sondage envoyé avec deadline",
+                        hint=(
+                            "GForm ou Moodle : choisir le format qui permet de "
+                            "récupérer la commande de chacun avec la somme dûe. "
+                            "On a une <strong>deadline</strong> après laquelle "
+                            "les gens se débrouilleront tout seuls"
+                        ),
                     ),
                 ),
                 subs=(
