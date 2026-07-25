@@ -454,6 +454,12 @@ STEPS: tuple[Step, ...] = (
             ),
         ),
     ),
+    Step(
+        id="s_extras",
+        num="Bloc 12",
+        title="Autre chose ?",
+        items=(Item(id="s_extras_extras", type="extras", label=""),),
+    ),
 )
 
 
@@ -472,7 +478,7 @@ def is_cotech_done(state: State) -> bool:
 
 
 def item_done(item: Item, state: State) -> bool:
-    if item.type in {"collabs_list", "orga_repets"}:
+    if item.type in {"collabs_list", "orga_repets", "extras"}:
         return True
     artistic = _is_artistic(state)
     if item.simple_only and artistic:
@@ -507,7 +513,7 @@ class Progress:
 
 
 def _item_progress(item: Item, state: State) -> tuple[int, int]:
-    if item.type in {"collabs_list", "orga_repets"}:
+    if item.type in {"collabs_list", "orga_repets", "extras"}:
         return 0, 0
     artistic = _is_artistic(state)
     if item.simple_only and artistic:

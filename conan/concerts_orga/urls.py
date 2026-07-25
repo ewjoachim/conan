@@ -47,6 +47,22 @@ urlpatterns = [
         views.orepet_update,
         name="o_orepet_update",
     ),
+    path("concert/<int:pk>/extra/add/", views.extra_add, name="o_extra_add"),
+    path(
+        "concert/<int:pk>/extra/<int:idx>/delete/",
+        views.extra_delete,
+        name="o_extra_delete",
+    ),
+    path(
+        "concert/<int:pk>/extra/<int:idx>/update/",
+        views.extra_update,
+        name="o_extra_update",
+    ),
+    path(
+        "concert/<int:pk>/extra/<int:idx>/toggle/",
+        views.extra_toggle,
+        name="o_extra_toggle",
+    ),
     path("concert/<int:pk>/archive/", views.orga_archive, name="o_archive"),
     path("concert/<int:pk>/unarchive/", views.orga_unarchive, name="o_unarchive"),
     path("concert/<int:pk>/delete/", views.orga_delete, name="o_delete"),
