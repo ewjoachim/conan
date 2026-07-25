@@ -1,0 +1,17 @@
+{% from "concerts_orga/partials/macros.html.jinja" import toggle_attrs %}
+<div class="step {% if orga_is_step_done(step, state) %}completed{% endif %} {% if open_step_id == step.id %}open{% endif %}" id="step_{{ step.id }}">
+  <div class="step-header" onclick="this.parentElement.classList.toggle('open')">
+    <span class="step-title">{{ step.title }}</span>
+    <span class="step-chevron">▼</span>
+  </div>
+  <div class="step-body">
+    {% set is_artistic = state.get('yn_sg_scenario') == 'y' %}
+    {% for item in step.items %}
+      {% if (item.simple_only and is_artistic) or (item.artistic_only and not is_artistic) %}
+      {% elif item.visible_when and state.get('yn_' + item.visible_when) != 'y' %}
+      {% else %}
+        {% include "concerts_orga/partials/item.html.jinja" %}
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>

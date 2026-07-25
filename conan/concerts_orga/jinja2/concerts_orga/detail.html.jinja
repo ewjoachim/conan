@@ -1,0 +1,65 @@
+{% extends "base.html.jinja" %}
+{% block title %}CONAN Orga — {{ concert.name or 'Concert' }}{% endblock %}
+
+{% block body %}
+<div class="site-header sticky">
+  <div class="header-inner">
+    <div class="header-top">
+      <a class="back-link" href="{{ url('list') }}">← Tous les concerts</a>
+      {% include "concerts_orga/partials/title.html.jinja" %}
+      <span class="save-indicator" id="save-indicator">—</span>
+      {% if request.user.is_authenticated %}
+      <form class="user-bar" method="POST" action="{{ url('logout') }}">
+        {{ csrf_input }}
+        <button type="submit" class="btn-logout">Déconnexion</button>
+      </form>
+      {% endif %}
+    </div>
+    {% include "concerts_orga/partials/progress.html.jinja" %}
+  </div>
+</div>
+
+<div class="meta-section">
+  <div class="meta-card">
+    <div class="meta-field">
+      <span class="meta-label">Nom du concert</span>
+      <input class="meta-input" type="text" value="{{ concert.name }}" placeholder="—" name="value"
+        hx-post="{{ url('o_meta', args=[concert.pk]) }}" hx-vals='{"field": "name"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Date</span>
+      <input class="meta-input" type="date" value="{{ concert.date.isoformat() if concert.date else '' }}" name="value"
+        hx-post="{{ url('o_meta', args=[concert.pk]) }}" hx-vals='{"field": "date"}'
+        hx-trigger="change" hx-swap="none">
+    </div>
+    <div class="meta-field">
+      <span class="meta-label">Respo Negi</span>
+      <input class="meta-input" type="text" value="{{ concert.respo }}" placeholder="—" name="value"
+        hx-post="{{ url('o_meta', args=[concert.pk]) }}" hx-vals='{"field": "respo"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">
+    </div>
+    <div class="meta-field full">
+      <span class="meta-label">Lieu</span>
+      <textarea class="meta-textarea" placeholder="Salle, adresse…" name="value"
+        hx-post="{{ url('o_meta', args=[concert.pk]) }}" hx-vals='{"field": "lieu"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">{{ concert.lieu }}</textarea>
+    </div>
+    <div class="meta-field full">
+      <span class="meta-label">Contact de la salle</span>
+      <textarea class="meta-textarea" placeholder="Nom, téléphone, email…" name="value"
+        hx-post="{{ url('o_meta', args=[concert.pk]) }}" hx-vals='{"field": "contact_salle"}'
+        hx-trigger="input changed delay:800ms" hx-swap="none">{{ concert.contact_salle }}</textarea>
+    </div>
+  </div>
+</div>
+
+<div class="steps-toolbar">
+  <p class="steps-intro">L'ordre des actions peut varier, <em>« on s'adapte ! »</em></p>
+  <div class="fold-btns">
+    <button class="btn-fold" onclick="document.querySelectorAll('.step').forEach(s=>s.classList.add('open'))">Tout déplier</button>
+    <button class="btn-fold" onclick="document.querySelectorAll('.step').forEach(s=>s.classList.remove('open'))">Tout replier</button>
+  </div>
+</div>
+{% include "concerts_orga/partials/all_steps.html.jinja" %}
+{% endblock %}
