@@ -1,0 +1,25 @@
+name: Dependabot auto-merge
+
+# Dependabot only opens security-update PRs here (Renovate covers version
+# updates and automerges its own). Auto-merge still waits for the required
+# checks (build + Autofix), so a broken bump never lands.
+
+on: pull_request
+
+permissions: {}
+
+jobs:
+  automerge:
+    name: Enable auto-merge
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    # Dependabot-triggered runs get a read-only token unless it is raised here.
+    permissions:
+      contents: write # enabling auto-merge counts as a write to the branch
+      pull-requests: write
+    steps:
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --merge "$PR_URL"
