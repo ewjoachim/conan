@@ -1,5 +1,5 @@
 {
-  extends: ["config:recommended", ":enablePreCommit", "docker:pinDigests"],
+  extends: ["config:recommended", ":enablePreCommit", "docker:pinDigests", "helpers:pinGitHubActionDigests"],
   schedule: ["* * 6 * *"],
   labels: ["deps"],
   lockFileMaintenance: {
