@@ -22,7 +22,7 @@ def environment(**options: Any) -> Environment:
     # CSRF helpers here. It also passes autoescape=True; we set it defensively so
     # the env is safe even if instantiated outside the backend.
     options.setdefault("autoescape", True)
-    env = Environment(**options)  # noqa: S701  -- autoescape forced on above
+    env = Environment(**options)  # ruff: ignore[jinja2-autoescape-false]  -- autoescape forced on above
     # env.globals is effectively dict[str, Any] at runtime; the cast keeps the
     # type checker happy about the heterogeneous values we register.
     g = cast("dict[str, Any]", env.globals)
