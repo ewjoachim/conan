@@ -560,8 +560,7 @@ def _toggle_keys() -> frozenset[str]:
             keys.add(f"tf_{item.id}")
         if item.type == "cotech":
             keys.add("cotech_transmis")
-        for sub in (*item.leading_subs, *item.subs):
-            keys.add(sub.id)
+        keys.update(sub.id for sub in (*item.leading_subs, *item.subs))
     return frozenset(keys)
 
 

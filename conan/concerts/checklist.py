@@ -348,8 +348,7 @@ def _toggle_keys() -> frozenset[str]:
                 keys.add(f"{item.id}_sondage_fait")
                 keys.add(f"{item.id}_sondage_depile")
                 keys.add(f"{item.id}_info_transmises")
-            for sub in item.subs:
-                keys.add(sub.id)
+            keys.update(sub.id for sub in item.subs)
     return frozenset(keys)
 
 
