@@ -1,6 +1,6 @@
 # Frontend assets: fetch JS deps (htmx, ...) via npm so they're integrity-checked
 # by package-lock.json and tracked by Renovate. Add deps with `npm install <pkg>`.
-FROM node:24-slim@sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6 AS assets
+FROM node:24-slim@sha256:b96009b6b18dc15ae52781abe71029198436d556149f441a11a44a706055c3a5 AS assets
 WORKDIR /assets
 COPY package.json package-lock.json ./
 RUN npm ci
