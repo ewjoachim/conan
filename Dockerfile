@@ -1,11 +1,11 @@
 # Frontend assets: fetch JS deps (htmx, ...) via npm so they're integrity-checked
 # by package-lock.json and tracked by Renovate. Add deps with `npm install <pkg>`.
-FROM node:24-slim@sha256:b96009b6b18dc15ae52781abe71029198436d556149f441a11a44a706055c3a5 AS assets
+FROM node:24-slim@sha256:d6aa754f16b3197301076f047b5def2f02ea1dbbc2ca920407d46d7ec7f87b20 AS assets
 WORKDIR /assets
 COPY package.json package-lock.json ./
 RUN npm ci
 
-FROM python:3.14-slim@sha256:c3e521df8b2b498a7a682e7e18676771cb80c6b75b8699af886b2d554ce40151
+FROM python:3.14-slim@sha256:f85c5697265c178cc6887276c55fe16cf3d14ca35c3df6a5eab3b360534a55d2
 
 # uv from the official image (no pip middleman).
 COPY --from=ghcr.io/astral-sh/uv:0.12.23@sha256:61d393e44e249f2e4b526b6c7ddcecce245946826e608e11c93ad4f5bba55b21 /uv /uvx /bin/
