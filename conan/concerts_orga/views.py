@@ -1,4 +1,4 @@
-import datetime
+import datetime as dt
 from typing import Any
 
 from django.contrib.auth.decorators import login_required
@@ -19,7 +19,7 @@ VISIBILITY_ITEMS = frozenset(["sg_collab", "sg_scenario"])
 def orga_create(request: HttpRequest) -> HttpResponse:
     raw_date = request.POST.get("date", "").strip()
     try:
-        parsed_date = datetime.date.fromisoformat(raw_date) if raw_date else None
+        parsed_date = dt.date.fromisoformat(raw_date) if raw_date else None
     except ValueError:
         parsed_date = None
     concert = OrgaConcert.objects.create(
@@ -158,7 +158,7 @@ def orga_meta(request: HttpRequest, pk: int) -> HttpResponse:
     concert = get_object_or_404(OrgaConcert, pk=pk)
     value: Any = request.POST.get("value", "").strip()
     if field == "date":
-        value = datetime.date.fromisoformat(value) if value else None
+        value = dt.date.fromisoformat(value) if value else None
     setattr(concert, field, value)
     concert.save(update_fields=[field, "updated_at"])
     if field == "name":
