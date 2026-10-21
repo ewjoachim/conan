@@ -12,7 +12,7 @@ silent (HTTP 204) so the user's textarea keeps focus while typing.
 
 # login_not_required exists since Django 5.1 (our floor is 5.2); the django-types
 # stubs lag behind, so silence ty's import error here.
-import datetime
+import datetime as dt
 import itertools
 from dataclasses import dataclass
 from typing import Any
@@ -55,7 +55,7 @@ class ConcertCard:
 
     pk: int
     name: str
-    date: datetime.date | None
+    date: dt.date | None
     respo: str
     progress: int
     kind: str  # "classic" | "orga"
@@ -68,8 +68,8 @@ class ConcertCard:
 
 
 def _classic_cards(concerts: models.QuerySet[Concert]) -> list[ConcertCard]:
-    today = datetime.datetime.now(tz=datetime.UTC).date()
-    warn_before = today + datetime.timedelta(days=5)
+    today = dt.datetime.now(tz=dt.UTC).date()
+    warn_before = today + dt.timedelta(days=5)
     return [
         ConcertCard(
             pk=c.pk,
@@ -130,7 +130,7 @@ def concert_archives(request: HttpRequest) -> HttpResponse:
     orga = OrgaConcert.objects.filter(archived=True)
     cards = sorted(
         itertools.chain(_classic_cards(classic), _orga_cards(orga)),
-        key=lambda card: card.date or datetime.date.min,
+        key=lambda card: card.date or dt.date.min,
         reverse=True,
     )
     html = render_to_string(
@@ -145,7 +145,7 @@ def concert_archives(request: HttpRequest) -> HttpResponse:
 def concert_create(request: HttpRequest) -> HttpResponse:
     raw_date = request.POST.get("date", "").strip()
     try:
-        parsed_date = datetime.date.fromisoformat(raw_date) if raw_date else None
+        parsed_date = dt.date.fromisoformat(raw_date) if raw_date else None
     except ValueError:
         parsed_date = None
     concert = Concert.objects.create(
@@ -262,7 +262,7 @@ def update_meta(request: HttpRequest, pk: int) -> HttpResponse:
     concert = get_object_or_404(Concert, pk=pk)
     value: Any = request.POST.get("value", "").strip()
     if field == "date":
-        value = datetime.date.fromisoformat(value) if value else None
+        value = dt.date.fromisoformat(value) if value else None
     setattr(concert, field, value)
     concert.save(update_fields=[field, "updated_at"])
 

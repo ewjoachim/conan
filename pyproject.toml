@@ -83,24 +83,24 @@ extend-select = [
     "I",   # isort
 ]
 ignore = [
-    "PLR0911", # https://docs.astral.sh/ruff/rules/too-many-return-statements/
-    "PLR0912", # https://docs.astral.sh/ruff/rules/too-many-branches/
-    "PLR0913", # https://docs.astral.sh/ruff/rules/too-many-arguments/
-    "PLR0915", # https://docs.astral.sh/ruff/rules/too-many-statements/
-    "RUF029",  # https://docs.astral.sh/ruff/rules/unused-async/
-    "N818",    # https://docs.astral.sh/ruff/rules/error-suffix-on-exception-name/
-    "PLR2004", # https://docs.astral.sh/ruff/rules/magic-value-comparison/
-    "S324",    # https://docs.astral.sh/ruff/rules/hashlib-insecure-hash-function/
-    "PLW1514", # https://docs.astral.sh/ruff/rules/unspecified-encoding/
-    "PLR6301", # https://docs.astral.sh/ruff/rules/no-self-use/
-    "RUF012",  # mutable class attrs: false-positive on Django Meta/migrations
+    "too-many-return-statements",
+    "too-many-branches",
+    "too-many-arguments",
+    "too-many-statements",
+    "unused-async",
+    "error-suffix-on-exception-name",
+    "magic-value-comparison",
+    "hashlib-insecure-hash-function",
+    "unspecified-encoding",
+    "no-self-use",
+    "mutable-class-default", # mutable class attrs: false-positive on Django Meta/migrations
 ]
 fixable = ["ALL"]
-unfixable = ["T201"]
+unfixable = ["print"]
 extend-ignore = [
-    "E501", # line too long
+    "line-too-long",
 ]
 
 [tool.ruff.lint.per-file-ignores]
 # Standard Django manage.py defers the import inside main() on purpose.
-"manage.py" = ["PLC0415"]
+"manage.py" = ["import-outside-top-level"]
