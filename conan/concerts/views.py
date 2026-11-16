@@ -18,7 +18,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from django.contrib.auth.decorators import (
-    login_not_required,  # ty: ignore[unresolved-import]
+    login_not_required,  # ty: ignore[import-not-found]
     login_required,
 )
 from django.db import connection, models, transaction
