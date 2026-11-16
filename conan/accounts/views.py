@@ -17,7 +17,7 @@ from django.contrib.auth import authenticate, login, logout
 # login_not_required exists since Django 5.1 (our floor is 5.2); the django-types
 # stubs lag behind, so silence ty's import error here.
 from django.contrib.auth.decorators import (
-    login_not_required,  # ty: ignore[unresolved-import]
+    login_not_required,  # ty: ignore[import-not-found]
 )
 from django.http import (
     HttpRequest,

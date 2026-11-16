@@ -90,7 +90,7 @@ class GoogleIDTokenBackend(BaseBackend):
 
     # Backends legitimately take credential-specific kwargs rather than the stub's
     # username/password, so the override signature differs by design.
-    def authenticate(  # ty: ignore[invalid-method-override]
+    def authenticate(  # ty: ignore[incompatible-method-override]
         self,
         request: HttpRequest | None,
         credential: str | None = None,
@@ -149,7 +149,7 @@ class DevAutoLoginBackend(BaseBackend):
     ``DEBUG`` so it is inert in production.
     """
 
-    def authenticate(  # ty: ignore[invalid-method-override]
+    def authenticate(  # ty: ignore[incompatible-method-override]
         self,
         request: HttpRequest | None,
         dev_autologin: bool = False,
